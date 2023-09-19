@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: pre
+  name: {{APP}}
+  labels:
+    app: {{APP}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{APP}}
+  template:
+    metadata:
+      labels:
+        app: {{APP}}
+    spec:
+      containers:
+        - name: {{APP}}
+          image: {{IMAGE}}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 36021
+              name: http
+          volumeMounts:
+            - name: app-logs
+              mountPath: /data/logs/go-template
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: 500m
+          env:
+            - name: RunMode
+              value: debug
+            - name: MySQLWriteHost
+              value: 127.0.0.1
+            - name: MySQLWritePort
+              value: "3306"
+            - name: MySQLWriteUser
+              value: root
+            - name: MySQLWritePassword
+              value: "MySQLWritePassword"
+            - name: MySQLWriteDB
+              value: go_template_test
+            - name: KafkaAddr
+              value: "127.0.0.1:9092,127.0.0.1:9092,127.0.0.1:9092"
+            - name: TraceAgent
+              value: 127.0.0.1:6831
+      volumes:
+        - name: app-logs
+          hostPath:
+            path: "/data/logs/cmp-worker"
+      imagePullSecrets:
+        - name: image-pull
+      nodeSelector:
+        env: pre
+        public_network: "true"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: pre
+  name: {{APP}}
+  labels:
+    app: {{APP}}
+spec:
+  selector:
+    app: {{APP}}
+  type: NodePort
+  ports:
+    - name: http
+      protocol: TCP
+      port: 36021
+      nodePort: 36021

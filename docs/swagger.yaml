@@ -1,0 +1,181 @@
+basePath: /
+definitions:
+  common.Response:
+    properties:
+      Data: {}
+      Message:
+        type: string
+      RetCode:
+        type: integer
+    type: object
+  common.ResponseWithTotalCount:
+    properties:
+      Data: {}
+      Message:
+        type: string
+      RetCode:
+        type: integer
+      TotalCount:
+        type: integer
+    type: object
+  demo.DeleteParams:
+    properties:
+      ids:
+        description: 待删除 ID 列表
+        items:
+          type: integer
+        type: array
+    required:
+    - ids
+    type: object
+  demo.IDParams:
+    properties:
+      Id:
+        description: 主键 ID
+        type: integer
+    required:
+    - Id
+    type: object
+  models.Demo:
+    properties:
+      CreateTime:
+        type: integer
+      Creator:
+        type: string
+      Deleter:
+        type: string
+      Id:
+        type: integer
+      UpdateTime:
+        description: 更新时间
+        type: integer
+      Updater:
+        type: string
+      User:
+        type: string
+    type: object
+  types.BasicQuery:
+    properties:
+      Fields:
+        description: 指定返回字段
+        items:
+          type: string
+        type: array
+      IdList:
+        description: id数组
+        items:
+          type: integer
+        type: array
+      Keyword:
+        description: 关键词(全局模糊搜索)
+        type: string
+      Limit:
+        description: 分页条数
+        type: integer
+      Offset:
+        description: 分页偏移量
+        type: integer
+      Order:
+        description: 排序，支持desc和asc
+        type: string
+      Query:
+        description: 自定义查询语句；使用RSQL语法
+        type: string
+    type: object
+info:
+  contact: {}
+  description: a template
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: go-template
+  version: "1.0"
+paths:
+  ?Action=Delete:
+    post:
+      consumes:
+      - application/json
+      description: 删除 agent
+      parameters:
+      - description: 删除请求参数
+        in: body
+        name: params
+        schema:
+          $ref: '#/definitions/demo.DeleteParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 结果：{RetCode:code,Data:数据,Message:消息}
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: 结果：{RetCode:code,Data:数据,Message:消息}
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 删除 agent
+      tags:
+      - Demo
+  ?Action=GetDetail:
+    post:
+      consumes:
+      - application/json
+      description: 获取详情
+      parameters:
+      - description: 请求参数
+        in: body
+        name: params
+        schema:
+          $ref: '#/definitions/demo.IDParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 结果：{RetCode:code,Data:数据,Message:消息}
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                Data:
+                  $ref: '#/definitions/models.Demo'
+              type: object
+        "500":
+          description: 结果：{RetCode:code,Data:数据,Message:消息}
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取详情
+      tags:
+      - Demo
+  ?Action=GetList:
+    post:
+      consumes:
+      - application/json
+      description: 获取列表
+      parameters:
+      - description: 查询通用请求参数
+        in: body
+        name: params
+        schema:
+          $ref: '#/definitions/types.BasicQuery'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 结果：{RetCode:code,Data:数据,Message:消息}
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.ResponseWithTotalCount'
+            - properties:
+                Data:
+                  items:
+                    $ref: '#/definitions/models.Demo'
+                  type: array
+              type: object
+        "500":
+          description: 结果：{RetCode:code,Data:数据,Message:消息}
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取列表
+      tags:
+      - Demo
+swagger: "2.0"

@@ -1,0 +1,41 @@
+base:
+  app:
+    service_name: go-template
+    local_ip: 0.0.0.0
+    api_port: 9901
+    run_mode: debug
+    refresh_minutes: 10
+
+  tracer:
+    local_agent_host_port: 127.0.0.1:6831
+
+  log:
+    level: debug
+    development: true
+    log_path: logs
+
+  mysql:
+    write_db_host: 127.0.0.1
+    write_db_port: 3306
+    write_db_user: root
+    write_db_password: root
+    write_db: cmp
+    table_prefix: cmp_
+    max_idle_conns: 10
+    max_open_conns: 1000
+    logging: true
+    log_level: info
+    # 客户端连接的存活时间(分钟)，该值请小于当前环境MySQL wait_timeout的时间，避免服务端主动断开连接的风险
+    conn_max_life_time: 0
+
+  redis:
+    host_and_port: 127.0.0.1:6380
+    password: 123456
+    db: 10
+    pool_size: 20
+
+  kafka:
+    addr: 127.0.0.1:9092,127.0.0.1:9092,127.0.0.1:9092
+    queue_length: 1000
+    enable_log: false
+
