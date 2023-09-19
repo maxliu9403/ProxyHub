@@ -50,7 +50,7 @@ spec:
       volumes:
         - name: app-logs
           hostPath:
-            path: "/data/logs/cmp-worker"
+            path: "/data/logs/go-template"
       imagePullSecrets:
         - name: image-pull
       nodeSelector:

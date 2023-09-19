@@ -23,7 +23,6 @@
 - 基于 [sarama](https://github.com/Shopify/sarama) 的 `Kafka` 生产者和消费者，可按需使用或删除。Kafka 集群最低支持 `0.8.2.0` 版本。
 - swagger2.0 文档
 - 演示的单元测试用例。接口具体实现的函数单元测试，可在 `internal/logic/demo/demo_test.go` 查看
-- 集成公司 kun CI/CD 的部署模板，模板文件为 `.gitlab-ci.yml.tmpl`
 
 ## 注意事项
 
