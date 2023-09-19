@@ -27,8 +27,6 @@ func TestGetDetail(t *testing.T) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/?Action=GetDetail", bytes.NewBuffer(params))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set(userHeader, userHeaderValue)
-	req.Header.Set(orgHeader, orgHeaderValue)
 	setupRouter().ServeHTTP(w, req)
 
 	if w.Code != 200 {
