@@ -61,10 +61,6 @@ interface，新建一个以 `test_` 为前缀的文件，实现 interface 用于
 
 `vendor` 目录默认从项目中忽略，为加速 CI 中的编译速度，可以考虑将 vendor 添加到实际项目中
 
-### 关于 Swagger 文档
-
-首先需要电脑本地有命令 `action-swag`，若不存在，请使用
-
 ### 关于 RSQL
 操作符 | 操作符
 -- |--|
