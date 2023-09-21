@@ -39,3 +39,13 @@ base:
     queue_length: 1000
     enable_log: false
 
+  etcd:
+    endpoints: 127.0.0.1:3379
+    # 以下配置按需开启
+    # dial_timeout: 1
+    # username:
+    # password:
+    # ca_file_path:
+    # cert_file_path:
+    # key_file_path:
+

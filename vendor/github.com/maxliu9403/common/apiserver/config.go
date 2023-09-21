@@ -10,14 +10,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/maxliu9403/common/etcd"
 	"github.com/maxliu9403/common/ratelimiter"
 
+	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/maxliu9403/common/gormdb"
 	"github.com/maxliu9403/common/kafka"
 	"github.com/maxliu9403/common/logger"
 	"github.com/maxliu9403/common/rediscache"
 	"github.com/maxliu9403/common/tracer"
-	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/spf13/cobra"
 )
 
@@ -38,6 +39,7 @@ type APIConfig struct {
 	Kafka       kafka.Config              `yaml:"kafka"`
 	Tracer      tracer.Config             `yaml:"tracer"`
 	RateLimiter ratelimiter.LimiterConfig `yaml:"ratelimiter"`
+	Etcd        etcd.Config               `yaml:"etcd"`
 }
 
 type AppConfig struct {
@@ -100,6 +102,17 @@ func (c *APIConfig) initService(ctx context.Context, opts *serverOptions) (err e
 
 	if c.Kafka.Addr != "" {
 		_, err = c.Kafka.BuildKafka(ctx)
+		if err != nil {
+			return
+		}
+	}
+
+	if c.Etcd.Endpoints != "" {
+		err = c.Etcd.Init(ctx)
+		if err != nil {
+			return
+		}
+		err = etcd.Default().CreateEtcdV3Client()
 		if err != nil {
 			return
 		}
