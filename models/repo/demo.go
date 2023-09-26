@@ -7,10 +7,13 @@
 
 package repo
 
-import "github.com/maxliu9403/common/gormdb"
+import (
+	"github.com/maxliu9403/common/gormdb"
+	"github.com/maxliu9403/go-template/internal/types"
+)
 
 type DemoRepo interface {
-	gormdb.GetListCrud
+	GetList(q types.BasicQuery, model, list interface{}) (total int64, err error)
 	gormdb.GetByIDCrud
 	Deletes([]int64) (err error)
 }

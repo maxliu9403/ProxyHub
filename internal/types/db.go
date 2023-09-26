@@ -8,11 +8,13 @@ package types
 
 // 仅用于 swagger 文档
 type BasicQuery struct {
-	IDList  []int64  `json:"IdList"`  // id数组
-	Fields  []string `json:"Fields"`  // 指定返回字段
-	Keyword string   `json:"Keyword"` // 关键词(全局模糊搜索)
-	Order   string   `json:"Order"`   // 排序，支持desc和asc
-	Limit   int      `json:"Limit"`   // 分页条数
-	Offset  int      `json:"Offset"`  // 分页偏移量
-	Query   string   `json:"Query"`   // 自定义查询语句；使用RSQL语法
+	IDList     []int64           `json:"IdList"`     // id数组
+	FuzzyField map[string]string `json:"FuzzyField"` // 模糊查询字段
+	Fields     []string          `json:"Fields"`     // 指定返回字段
+	Keyword    string            `json:"Keyword"`    // 关键词(全局模糊搜索)
+	Order      string            `json:"Order"`      // 排序，支持desc和asc
+	OrderBy    string            `json:"OrderBy"`    // 排序字段，默认按照创建时间降序
+	Limit      int               `json:"Limit"`      // 分页条数
+	Offset     int               `json:"Offset"`     // 分页偏移量
+	Query      string            `json:"Query"`      // 自定义查询语句；使用RSQL语法，具体见：https://cmdb-web.ucloudadmin.com/docs/#api-appendix-query-syntax
 }
