@@ -264,6 +264,13 @@ var doc = `{
                         "type": "string"
                     }
                 },
+                "FuzzyField": {
+                    "description": "模糊查询字段",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
                 "IdList": {
                     "description": "id数组",
                     "type": "array",
@@ -287,8 +294,12 @@ var doc = `{
                     "description": "排序，支持desc和asc",
                     "type": "string"
                 },
+                "OrderBy": {
+                    "description": "排序字段，默认按照创建时间降序",
+                    "type": "string"
+                },
                 "Query": {
-                    "description": "自定义查询语句；使用RSQL语法",
+                    "description": "自定义查询语句；使用RSQL语法，具体见：https://cmdb-web.ucloudadmin.com/docs/#api-appendix-query-syntax",
                     "type": "string"
                 }
             }

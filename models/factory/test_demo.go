@@ -8,7 +8,7 @@
 package factory
 
 import (
-	"github.com/maxliu9403/common/gormdb"
+	"github.com/maxliu9403/go-template/internal/types"
 	"github.com/maxliu9403/go-template/models"
 	"github.com/maxliu9403/go-template/models/repo"
 )
@@ -37,7 +37,7 @@ var testDemoData = []models.Demo{{
 	User: "test5",
 }}
 
-func (c *testCrudImpl) GetList(q gormdb.BasicQuery, model, list interface{}) (total int64, err error) {
+func (c *testCrudImpl) GetList(q types.BasicQuery, model, list interface{}) (total int64, err error) {
 	_, _ = q, model
 
 	total = 5

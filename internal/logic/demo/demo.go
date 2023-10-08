@@ -3,6 +3,7 @@ package demo
 import (
 	"context"
 	"fmt"
+	"github.com/maxliu9403/go-template/internal/types"
 
 	"github.com/maxliu9403/common/gormdb"
 	"github.com/maxliu9403/common/logger"
@@ -30,7 +31,7 @@ func (s *Svc) getRepo() repo.DemoRepo {
 	return factory.DemoRepo(s.DB)
 }
 
-func (s *Svc) GetList(q gormdb.BasicQuery) (data *common.ListData, err error) {
+func (s *Svc) GetList(q types.BasicQuery) (data *common.ListData, err error) {
 	data = &common.ListData{}
 
 	crud := s.getRepo()

@@ -7,12 +7,12 @@
 package handler
 
 import (
+	"github.com/maxliu9403/go-template/internal/types"
 	"strings"
 
 	"github.com/maxliu9403/go-template/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxliu9403/common/gormdb"
 	"github.com/maxliu9403/go-template/internal/common"
 	"github.com/maxliu9403/go-template/internal/logic/demo"
 )
@@ -39,7 +39,7 @@ func (m *demoController) GetList(c *gin.Context) {
 	var (
 		svc    demo.Svc
 		err    error
-		params gormdb.BasicQuery
+		params types.BasicQuery
 	)
 
 	if !m.CheckParams(c, &params) {

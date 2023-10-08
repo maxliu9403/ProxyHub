@@ -205,7 +205,7 @@ github.com/mattn/go-isatty
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 ## explicit
 github.com/matttproud/golang_protobuf_extensions/pbutil
-# github.com/maxliu9403/common v1.0.2
+# github.com/maxliu9403/common v1.0.3
 ## explicit; go 1.18
 github.com/maxliu9403/common/apiserver
 github.com/maxliu9403/common/apiserver/conf
