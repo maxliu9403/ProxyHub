@@ -1,13 +1,10 @@
 base:
   app:
-    service_name: go-template
+    service_name: ClashProxyHub
     local_ip: 0.0.0.0
     api_port: 9901
     run_mode: debug
     refresh_minutes: 10
-
-  tracer:
-    local_agent_host_port: 127.0.0.1:6831
 
   log:
     level: debug
@@ -18,9 +15,9 @@ base:
     write_db_host: 127.0.0.1
     write_db_port: 3306
     write_db_user: root
-    write_db_password: root
-    write_db: cmp
-    table_prefix: cmp_
+    write_db_password: 12345678
+    write_db: ClashProxyHub
+    table_prefix: proxy_hub_
     max_idle_conns: 10
     max_open_conns: 1000
     logging: true
@@ -29,23 +26,7 @@ base:
     conn_max_life_time: 0
 
   redis:
-    host_and_port: 127.0.0.1:6380
-    password: 123456
+    host_and_port: 127.0.0.1:6379
+    password:
     db: 10
     pool_size: 20
-
-  kafka:
-    addr: 127.0.0.1:9092,127.0.0.1:9092,127.0.0.1:9092
-    queue_length: 1000
-    enable_log: false
-
-  etcd:
-    endpoints: 127.0.0.1:3379
-    # 以下配置按需开启
-    # dial_timeout: 1
-    # username:
-    # password:
-    # ca_file_path:
-    # cert_file_path:
-    # key_file_path:
-

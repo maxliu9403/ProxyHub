@@ -34,7 +34,7 @@ func newDemoController(base common.BaseController) *demoController {
 // @Param   	params     	body    	types.BasicQuery     	false    "查询通用请求参数"
 // @Success     200     {object}        common.ResponseWithTotalCount{Data=[]models.Demo} "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
-// @Router      ?Action=GetList             [post]
+// @Router      /api/demo/getList [post]
 func (m *demoController) GetList(c *gin.Context) {
 	var (
 		svc    demo.Svc
@@ -70,7 +70,7 @@ func (m *demoController) GetList(c *gin.Context) {
 // @Param   	params     	body    	demo.IDParams     	false    "请求参数"
 // @Success     200     {object}        common.Response{Data=models.Demo} "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
-// @Router      ?Action=GetDetail             [post]
+// @Router      /api/demo/getDetail [post]
 func (m *demoController) GetDetail(c *gin.Context) {
 	var (
 		svc    demo.Svc
@@ -98,7 +98,7 @@ func (m *demoController) GetDetail(c *gin.Context) {
 // @Param   	params     	body    	demo.DeleteParams     	false    "删除请求参数"
 // @Success     200     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
-// @Router      ?Action=Delete             [post]
+// @Router      /api/demo/delete [post]
 func (m *demoController) Delete(c *gin.Context) {
 	var (
 		svc    demo.Svc
