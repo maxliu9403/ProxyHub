@@ -19,15 +19,15 @@ import (
 	"strings"
 )
 
-type demoCrudImpl struct {
+type proxyGroupCrudImpl struct {
 	Conn *gorm.DB
 }
 
-func DemoRepo(db *gorm.DB) repo.DemoRepo {
-	return &demoCrudImpl{Conn: db}
+func ProxyGroupsRepo(db *gorm.DB) repo.ProxyGroupsRepo {
+	return &proxyGroupCrudImpl{Conn: db}
 }
 
-func (r *demoCrudImpl) GetList(q types.BasicQuery, model, list interface{}) (total int64, err error) {
+func (r *proxyGroupCrudImpl) GetList(q types.BasicQuery, model, list interface{}) (total int64, err error) {
 	db := r.Conn.Model(model)
 
 	// 指定字段
@@ -103,13 +103,17 @@ func (r *demoCrudImpl) GetList(q types.BasicQuery, model, list interface{}) (tot
 	return total, err
 }
 
-func (r *demoCrudImpl) GetByID(model interface{}, id int64) error {
+func (r *proxyGroupCrudImpl) GetByID(model interface{}, id int64) error {
 	crud := gormdb.NewCRUD(r.Conn)
 	err := crud.GetByID(model, id)
 	return err
 }
 
-func (r *demoCrudImpl) Deletes(ids []int64) (err error) {
-	err = r.Conn.Delete(&models.Demo{}, ids).Error
+func (r *proxyGroupCrudImpl) Deletes(ids []int64) (err error) {
+	err = r.Conn.Delete(&models.ProxyGroups{}, ids).Error
 	return err
+}
+
+func (r *proxyGroupCrudImpl) Create(group *models.ProxyGroups) error {
+	return r.Conn.Create(group).Error
 }

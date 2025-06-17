@@ -16,48 +16,34 @@ import (
 type testCrudImpl struct {
 }
 
-func DemoRepoForTest() repo.DemoRepo {
+func (t testCrudImpl) GetByID(model interface{}, id int64) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t testCrudImpl) GetList(q types.BasicQuery, model, list interface{}) (total int64, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t testCrudImpl) Deletes(int64s []int64) (err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t testCrudImpl) Create(group *models.ProxyGroups) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func DemoRepoForTest() repo.ProxyGroupsRepo {
 	return &testCrudImpl{}
 }
 
-var testDemoData = []models.Demo{{
+var testDemoData = []models.ProxyGroups{{
 	Meta: models.Meta{ID: 1, CreateTime: 1010101},
-	User: "test1",
+	Name: "test1",
 }, {
 	Meta: models.Meta{ID: 2, CreateTime: 1010101},
-	User: "test2",
-}, {
-	Meta: models.Meta{ID: 3, CreateTime: 1010101},
-	User: "test3",
-}, {
-	Meta: models.Meta{ID: 4, CreateTime: 1010101},
-	User: "test4",
-}, {
-	Meta: models.Meta{ID: 5, CreateTime: 1010101},
-	User: "test5",
+	Name: "test2",
 }}
-
-func (c *testCrudImpl) GetList(q types.BasicQuery, model, list interface{}) (total int64, err error) {
-	_, _ = q, model
-
-	total = 5
-	a := list.(*[]models.Demo)
-	*a = append(*a, testDemoData...)
-
-	return
-}
-
-func (c *testCrudImpl) GetByID(model interface{}, id int64) error {
-	_ = id
-	m := model.(*models.Demo)
-	m.ID = testDemoData[0].ID
-	m.User = testDemoData[0].User
-
-	return nil
-}
-
-func (c *testCrudImpl) Deletes(ids []int64) error {
-	_ = ids
-
-	return nil
-}

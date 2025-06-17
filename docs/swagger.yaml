@@ -6,7 +6,7 @@ definitions:
       Message:
         type: string
       RetCode:
-        type: integer
+        $ref: '#/definitions/common.RetCode'
     type: object
   common.ResponseWithTotalCount:
     properties:
@@ -14,11 +14,91 @@ definitions:
       Message:
         type: string
       RetCode:
-        type: integer
+        $ref: '#/definitions/common.RetCode'
       TotalCount:
         type: integer
     type: object
-  demo.DeleteParams:
+  common.RetCode:
+    enum:
+    - 0
+    - 4030
+    - 100050
+    - 6003
+    - 6004
+    - 6005
+    - 6006
+    - 6007
+    - 6008
+    - 6009
+    - 6010
+    - 6011
+    - 6012
+    - 6013
+    - 6014
+    - 6015
+    type: integer
+    x-enum-varnames:
+    - SUCCESS
+    - FORBIDDEN
+    - ActionNotFound
+    - FAILED
+    - ErrorDatabaseRead
+    - ErrorDatabaseWrite
+    - ErrInvalidParams
+    - ErrInvalidJSONParams
+    - ErrorPrivilege
+    - ErrorResourceNotExist
+    - ErrorCallOtherSrv
+    - ActionFailed
+    - ErrGetList
+    - ErrGetDetail
+    - ErrDelete
+    - ErrCreate
+  models.ProxyGroups:
+    properties:
+      CreateTime:
+        type: integer
+      Creator:
+        type: string
+      Deleter:
+        type: string
+      Description:
+        type: string
+      Id:
+        type: integer
+      MaxOnline:
+        type: string
+      Name:
+        type: string
+      UpdateTime:
+        description: 更新时间
+        type: integer
+      Updater:
+        type: string
+    type: object
+  proxy_group.CreateParams:
+    properties:
+      CreateTime:
+        type: integer
+      Creator:
+        type: string
+      Deleter:
+        type: string
+      Description:
+        type: string
+      Id:
+        type: integer
+      MaxOnline:
+        type: string
+      Name:
+        type: string
+      UpdateTime:
+        description: 更新时间
+        type: integer
+      Updater:
+        type: string
+    type: object
+  proxy_group.DeleteParams:
     properties:
       ids:
         description: 待删除 ID 列表
@@ -27,32 +107,6 @@ definitions:
         type: array
     required:
     - ids
-    type: object
-  demo.IDParams:
-    properties:
-      Id:
-        description: 主键 ID
-        type: integer
-    required:
-    - Id
-    type: object
-  models.Demo:
-    properties:
-      CreateTime:
-        type: integer
-      Creator:
-        type: string
-      Deleter:
-        type: string
-      Id:
-        type: integer
-      UpdateTime:
-        description: 更新时间
-        type: integer
-      Updater:
-        type: string
-      User:
-        type: string
     type: object
   types.BasicQuery:
     properties:
@@ -99,42 +153,18 @@ info:
   title: ProxyHub
   version: "1.0"
 paths:
-  ?Action=Delete:
+  /api/proxy_group:
     post:
       consumes:
       - application/json
-      description: 删除 agent
+      description: 创建一个新的代理分组
       parameters:
-      - description: 删除请求参数
+      - description: 创建参数
         in: body
         name: params
+        required: true
         schema:
-          $ref: '#/definitions/demo.DeleteParams'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 结果：{RetCode:code,Data:数据,Message:消息}
-          schema:
-            $ref: '#/definitions/common.Response'
-        "500":
-          description: 结果：{RetCode:code,Data:数据,Message:消息}
-          schema:
-            $ref: '#/definitions/common.Response'
-      summary: 删除 agent
-      tags:
-      - Demo
-  ?Action=GetDetail:
-    post:
-      consumes:
-      - application/json
-      description: 获取详情
-      parameters:
-      - description: 请求参数
-        in: body
-        name: params
-        schema:
-          $ref: '#/definitions/demo.IDParams'
+          $ref: '#/definitions/proxy_group.CreateParams'
       produces:
       - application/json
       responses:
@@ -145,20 +175,75 @@ paths:
             - $ref: '#/definitions/common.Response'
             - properties:
                 Data:
-                  $ref: '#/definitions/models.Demo'
+                  $ref: '#/definitions/models.ProxyGroups'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建分组
+      tags:
+      - 分组管理
+  /api/proxy_group/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取分组详情
+      parameters:
+      - description: 分组ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 结果：{RetCode:code,Data:数据,Message:消息}
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                Data:
+                  $ref: '#/definitions/models.ProxyGroups'
               type: object
         "500":
           description: 结果：{RetCode:code,Data:数据,Message:消息}
           schema:
             $ref: '#/definitions/common.Response'
-      summary: 获取详情
+      summary: 获取分组详情
       tags:
-      - Demo
-  ?Action=GetList:
+      - 分组管理
+  /api/proxy_group/delete:
+    delete:
+      consumes:
+      - application/json
+      description: 删除分组
+      parameters:
+      - description: 删除请求参数
+        in: body
+        name: params
+        schema:
+          $ref: '#/definitions/proxy_group.DeleteParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 结果：{RetCode:code,Data:数据,Message:消息}
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: 结果：{RetCode:code,Data:数据,Message:消息}
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 删除分组
+      tags:
+      - 分组管理
+  /api/proxy_group/list:
     post:
       consumes:
       - application/json
-      description: 获取列表
+      description: 获取分组列表
       parameters:
       - description: 查询通用请求参数
         in: body
@@ -176,14 +261,14 @@ paths:
             - properties:
                 Data:
                   items:
-                    $ref: '#/definitions/models.Demo'
+                    $ref: '#/definitions/models.ProxyGroups'
                   type: array
               type: object
         "500":
           description: 结果：{RetCode:code,Data:数据,Message:消息}
           schema:
             $ref: '#/definitions/common.Response'
-      summary: 获取列表
+      summary: 获取分组列表
       tags:
-      - Demo
+      - 分组管理
 swagger: "2.0"

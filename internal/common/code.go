@@ -25,6 +25,7 @@ const (
 	ErrGetList
 	ErrGetDetail
 	ErrDelete
+	ErrCreate
 )
 
 var codeMsg = map[RetCode]string{

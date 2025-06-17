@@ -1,6 +1,6 @@
 base:
   app:
-    service_name: ClashProxyHub
+    service_name: ProxyHub
     local_ip: 0.0.0.0
     api_port: 9901
     run_mode: debug
@@ -16,8 +16,8 @@ base:
     write_db_port: 3306
     write_db_user: root
     write_db_password: 12345678
-    write_db: ClashProxyHub
-    table_prefix: proxy_hub_
+    write_db: proxy_hub
+    table_prefix:
     max_idle_conns: 10
     max_open_conns: 1000
     logging: true

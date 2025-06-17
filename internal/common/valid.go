@@ -8,6 +8,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -100,7 +101,8 @@ func InitTrans(locale string) (err error) {
 func BindAndValid(c *gin.Context, form interface{}) (RetCode, error) {
 	err := c.ShouldBindBodyWith(form, binding.JSON)
 	if err != nil {
-		errs, ok := err.(validator.ValidationErrors)
+		var errs validator.ValidationErrors
+		ok := errors.As(err, &errs)
 		if !ok {
 			// 非 validator.ValidationErrors 类型错误直接返回
 			return ErrInvalidJSONParams, err

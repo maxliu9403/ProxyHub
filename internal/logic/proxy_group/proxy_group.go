@@ -1,4 +1,4 @@
-package demo
+package proxy_group
 
 import (
 	"context"
@@ -22,21 +22,21 @@ type Svc struct {
 	DB          *gorm.DB
 }
 
-func (s *Svc) getRepo() repo.DemoRepo {
+func (s *Svc) getRepo() repo.ProxyGroupsRepo {
 	if s.RunningTest {
 		return factory.DemoRepoForTest()
 	}
 
 	s.DB = gormdb.Cli(s.Ctx)
-	return factory.DemoRepo(s.DB)
+	return factory.ProxyGroupsRepo(s.DB)
 }
 
 func (s *Svc) GetList(q types.BasicQuery) (data *common.ListData, err error) {
 	data = &common.ListData{}
 
 	crud := s.getRepo()
-	table := &models.Demo{}
-	demoList := make([]models.Demo, 0)
+	table := &models.ProxyGroups{}
+	demoList := make([]models.ProxyGroups, 0)
 	total, err := crud.GetList(q, table, &demoList)
 	if err != nil {
 		logger.ErrorfWithTrace(s.Ctx, "query list failed: %s", err.Error())
@@ -54,10 +54,9 @@ type IDParams struct {
 	ID int64 `json:"Id" binding:"required"` // 主键 ID
 }
 
-func (s *Svc) Detail() (resp *models.Demo, err error) {
+func (s *Svc) Detail() (resp *models.ProxyGroups, err error) {
 	crud := s.getRepo()
-	demoInfo := &models.Demo{}
-
+	demoInfo := &models.ProxyGroups{}
 	err = crud.GetByID(demoInfo, s.ID)
 	if err != nil {
 		logger.ErrorfWithTrace(s.Ctx, "get %d from db failed: %s", s.ID, err.Error())
@@ -81,4 +80,30 @@ func (s *Svc) Delete(params DeleteParams) (err error) {
 	}
 
 	return err
+}
+
+type CreateParams struct {
+	common.Test
+	Name        string `json:"Name"`
+	MaxOnline   string `json:"MaxOnline"`
+	Description string `json:"Description"`
+}
+
+func (p CreateParams) ToModel() *models.ProxyGroups {
+	return &models.ProxyGroups{
+		Name:        p.Name,
+		MaxOnline:   p.MaxOnline,
+		Description: p.Description,
+	}
+}
+
+func (s *Svc) Create(params CreateParams) (*models.ProxyGroups, error) {
+	group := params.ToModel()
+	err := s.getRepo().Create(group)
+	if err != nil {
+		logger.ErrorfWithTrace(s.Ctx, "create group failed: %s", err.Error())
+		return nil, common.NewErrorCode(common.ErrCreate, err)
+	}
+
+	return group, nil
 }

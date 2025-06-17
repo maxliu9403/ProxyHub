@@ -9,11 +9,13 @@ package repo
 
 import (
 	"github.com/maxliu9403/ProxyHub/internal/types"
+	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/common/gormdb"
 )
 
-type DemoRepo interface {
-	GetList(q types.BasicQuery, model, list interface{}) (total int64, err error)
+type ProxyGroupsRepo interface {
 	gormdb.GetByIDCrud
+	GetList(q types.BasicQuery, model, list interface{}) (total int64, err error)
 	Deletes([]int64) (err error)
+	Create(group *models.ProxyGroups) error
 }
