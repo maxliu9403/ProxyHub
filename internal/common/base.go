@@ -8,6 +8,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -77,7 +78,8 @@ func (c *BaseController) ResponseWithTotalCount(ctx *gin.Context, data interface
 	var msg string
 	var retCode RetCode
 	if err != nil {
-		codeErr, ok := err.(CodeWithErr)
+		var codeErr CodeWithErr
+		ok := errors.As(err, &codeErr)
 		if ok {
 			retCode = codeErr.RetCode
 			if codeErr.Error() == "" {

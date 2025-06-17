@@ -57,10 +57,10 @@ func (m *proxyGroupController) GetList(c *gin.Context) {
 	svc.Ctx = c
 	data, err := svc.GetList(params)
 	if data == nil || err != nil {
-		m.ResponseWithTotalCount(c, []models.ProxyGroups{}, 0, common.NewErrorCode(common.ErrGetList, err))
+		m.ResponseWithTotalCount(c, []models.ProxyGroups{}, data.Counts, common.NewErrorCode(common.ErrGetList, err))
 		return
 	}
-	m.ResponseWithTotalCount(c, data, 0, common.NewErrorCode(common.ErrGetList, err))
+	m.ResponseWithTotalCount(c, data.Data, data.Counts, common.NewErrorCode(common.ErrGetList, err))
 }
 
 // GetDetail godoc

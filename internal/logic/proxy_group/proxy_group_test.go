@@ -9,9 +9,8 @@ package proxy_group
 
 import (
 	"context"
+	"github.com/maxliu9403/ProxyHub/internal/types"
 	"testing"
-
-	"github.com/maxliu9403/common/gormdb"
 )
 
 var s = Svc{
@@ -21,7 +20,7 @@ var s = Svc{
 }
 
 func TestGetList(t *testing.T) {
-	list, err := s.GetList(gormdb.BasicQuery{})
+	list, err := s.GetList(types.BasicQuery{})
 	if err != nil {
 		t.Fatal(err.Error())
 	}

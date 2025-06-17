@@ -10,10 +10,9 @@ package common
 type RetCode int
 
 const (
-	SUCCESS        RetCode = 0
-	FORBIDDEN      RetCode = 4030
-	ActionNotFound RetCode = 100050
-	FAILED         RetCode = 6000 + iota
+	SUCCESS   RetCode = 0
+	FORBIDDEN RetCode = 4030
+	FAILED    RetCode = 6000 + iota
 	ErrorDatabaseRead
 	ErrorDatabaseWrite
 	ErrInvalidParams
@@ -21,7 +20,6 @@ const (
 	ErrorPrivilege
 	ErrorResourceNotExist
 	ErrorCallOtherSrv
-	ActionFailed
 	ErrGetList
 	ErrGetDetail
 	ErrDelete
@@ -31,8 +29,6 @@ const (
 var codeMsg = map[RetCode]string{
 	SUCCESS:               "成功",
 	FAILED:                "失败",
-	ActionNotFound:        "Action not found",
-	ActionFailed:          "无效Action",
 	FORBIDDEN:             "无权限",
 	ErrorDatabaseRead:     "查询错误",
 	ErrorDatabaseWrite:    "保存失败",

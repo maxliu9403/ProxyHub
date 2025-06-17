@@ -14,10 +14,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-type RawAction struct {
-	Action string
-}
-
 func RegisterRouter(tra opentracing.Tracer, group *gin.RouterGroup) {
 	if tra != nil {
 		group.Use(middleware.GinInterceptorWithTrace(tra, true))
