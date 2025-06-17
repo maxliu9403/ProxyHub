@@ -22,7 +22,7 @@ func CallAPI(ctx context.Context, url string, params, resp interface{}, options 
 		return
 	}
 
-	header := map[string]string{"Content-Type": "application/json", "operator": "go-template", "User-Agent": "go-template"}
+	header := map[string]string{"Content-Type": "application/json", "operator": "ProxyHub", "User-Agent": "ProxyHub"}
 	if len(opts.header) != 0 {
 		header = opts.header
 	}

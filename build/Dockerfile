@@ -11,7 +11,7 @@ RUN echo '' > /etc/apk/repositories \
     && echo "${MIRROR_URL}v3.14/main" >> /etc/apk/repositories \
     && echo "${MIRROR_URL}v3.14/community" >> /etc/apk/repositories
 
-WORKDIR /go/src/github.com/maxliu9403/go-template
+WORKDIR /go/src/github.com/maxliu9403/ProxyHub
 
 COPY . .
 
@@ -26,8 +26,8 @@ RUN echo '' > /etc/apk/repositories \
     && echo "${MIRROR_URL}v3.14/community" >> /etc/apk/repositories
 
 COPY --from=builder /go/bin/app /
-COPY --from=builder /go/src/github.com/maxliu9403/go-template/docs/ /docs
-COPY --from=builder /go/src/github.com/maxliu9403/go-template/configs/dev.yaml /
+COPY --from=builder /go/src/github.com/maxliu9403/ProxyHub/docs/ /docs
+COPY --from=builder /go/src/github.com/maxliu9403/ProxyHub/configs/dev.yaml /
 
 EXPOSE 9901
 

@@ -9,12 +9,12 @@ package factory
 
 import (
 	"fmt"
+	"github.com/maxliu9403/ProxyHub/internal/types"
+	"github.com/maxliu9403/ProxyHub/models"
+	"github.com/maxliu9403/ProxyHub/models/repo"
 	"github.com/maxliu9403/common/gadget"
 	"github.com/maxliu9403/common/gormdb"
 	"github.com/maxliu9403/common/rsql"
-	"github.com/maxliu9403/go-template/internal/types"
-	"github.com/maxliu9403/go-template/models"
-	"github.com/maxliu9403/go-template/models/repo"
 	"gorm.io/gorm"
 	"strings"
 )

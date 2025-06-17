@@ -11,8 +11,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/maxliu9403/ProxyHub/internal/config"
 	"github.com/maxliu9403/common/apiserver/conf"
-	"github.com/maxliu9403/go-template/internal/config"
 	"github.com/spf13/cobra"
 )
 

@@ -12,18 +12,18 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/maxliu9403/ProxyHub/internal/common"
+	"github.com/maxliu9403/ProxyHub/internal/config"
+	"github.com/maxliu9403/ProxyHub/internal/handler"
+	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/common/apiserver"
 	"github.com/maxliu9403/common/apiserver/conf"
 	"github.com/maxliu9403/common/logger"
 	"github.com/maxliu9403/common/version"
-	"github.com/maxliu9403/go-template/internal/common"
-	"github.com/maxliu9403/go-template/internal/config"
-	"github.com/maxliu9403/go-template/internal/handler"
-	"github.com/maxliu9403/go-template/models"
 	"github.com/spf13/cobra"
 )
 
-const projectName = "go-template"
+const projectName = "ProxyHub"
 
 var (
 	configFile string

@@ -8,8 +8,8 @@
 package repo
 
 import (
+	"github.com/maxliu9403/ProxyHub/internal/types"
 	"github.com/maxliu9403/common/gormdb"
-	"github.com/maxliu9403/go-template/internal/types"
 )
 
 type DemoRepo interface {

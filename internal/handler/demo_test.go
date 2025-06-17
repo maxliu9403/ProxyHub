@@ -14,8 +14,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/maxliu9403/go-template/internal/common"
-	"github.com/maxliu9403/go-template/internal/logic/demo"
+	"github.com/maxliu9403/ProxyHub/internal/common"
+	"github.com/maxliu9403/ProxyHub/internal/logic/demo"
 )
 
 func TestGetDetail(t *testing.T) {

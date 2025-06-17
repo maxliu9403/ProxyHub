@@ -7,14 +7,14 @@
 package handler
 
 import (
-	"github.com/maxliu9403/go-template/internal/types"
+	"github.com/maxliu9403/ProxyHub/internal/types"
 	"strings"
 
-	"github.com/maxliu9403/go-template/models"
+	"github.com/maxliu9403/ProxyHub/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxliu9403/go-template/internal/common"
-	"github.com/maxliu9403/go-template/internal/logic/demo"
+	"github.com/maxliu9403/ProxyHub/internal/common"
+	"github.com/maxliu9403/ProxyHub/internal/logic/demo"
 )
 
 type demoController struct {

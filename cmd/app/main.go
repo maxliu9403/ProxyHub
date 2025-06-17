@@ -8,12 +8,12 @@
 package main
 
 import (
+	_ "github.com/maxliu9403/ProxyHub/docs"
+	"github.com/maxliu9403/ProxyHub/internal/app"
 	"github.com/maxliu9403/common/version"
-	_ "github.com/maxliu9403/go-template/docs"
-	"github.com/maxliu9403/go-template/internal/app"
 )
 
-// @title        go-template
+// @title        ProxyHub
 // @version      1.0
 // @description  a template
 // @BasePath     /

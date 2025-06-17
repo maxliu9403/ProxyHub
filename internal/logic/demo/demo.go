@@ -3,14 +3,14 @@ package demo
 import (
 	"context"
 	"fmt"
-	"github.com/maxliu9403/go-template/internal/types"
+	"github.com/maxliu9403/ProxyHub/internal/types"
 
+	"github.com/maxliu9403/ProxyHub/internal/common"
+	"github.com/maxliu9403/ProxyHub/models"
+	"github.com/maxliu9403/ProxyHub/models/factory"
+	"github.com/maxliu9403/ProxyHub/models/repo"
 	"github.com/maxliu9403/common/gormdb"
 	"github.com/maxliu9403/common/logger"
-	"github.com/maxliu9403/go-template/internal/common"
-	"github.com/maxliu9403/go-template/models"
-	"github.com/maxliu9403/go-template/models/factory"
-	"github.com/maxliu9403/go-template/models/repo"
 	"gorm.io/gorm"
 )
 

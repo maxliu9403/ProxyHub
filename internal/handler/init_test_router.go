@@ -11,8 +11,8 @@ import (
 	"context"
 
 	"github.com/gin-gonic/gin"
+	"github.com/maxliu9403/ProxyHub/internal/config"
 	"github.com/maxliu9403/common/apiserver"
-	"github.com/maxliu9403/go-template/internal/config"
 )
 
 func setupRouter() *gin.Engine {

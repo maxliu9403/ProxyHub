@@ -1,4 +1,4 @@
-module github.com/maxliu9403/go-template
+module github.com/maxliu9403/ProxyHub
 
 go 1.23.5
 

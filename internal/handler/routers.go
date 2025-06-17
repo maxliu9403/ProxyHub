@@ -13,8 +13,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/common/middleware"
-	"github.com/maxliu9403/go-template/internal/common"
 )
 
 var (

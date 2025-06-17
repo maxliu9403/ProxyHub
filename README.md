@@ -1,6 +1,6 @@
 # Go Template
 
-![go-template](./logo.png)
+![ProxyHub](./logo.png)
 
 基于 [Gin](https://github.com/gin-gonic/gin) 框架以及 [GORM](https://gorm.io/) 构建的后端 API 服务。
 

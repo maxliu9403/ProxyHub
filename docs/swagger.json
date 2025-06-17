@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "description": "a template",
-        "title": "go-template",
+        "title": "ProxyHub",
         "contact": {},
         "license": {
             "name": "Apache 2.0",

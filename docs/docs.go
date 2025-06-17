@@ -322,7 +322,7 @@ var SwaggerInfo = swaggerInfo{
 	Host:        "",
 	BasePath:    "/",
 	Schemes:     []string{},
-	Title:       "go-template",
+	Title:       "ProxyHub",
 	Description: "a template",
 }
 

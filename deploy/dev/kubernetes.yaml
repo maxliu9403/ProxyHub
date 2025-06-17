@@ -24,7 +24,7 @@ spec:
               name: http
           volumeMounts:
             - name: app-logs
-              mountPath: /data/logs/go-template
+              mountPath: /data/logs/ProxyHub
           resources:
             limits:
               memory: 512Mi
@@ -50,7 +50,7 @@ spec:
       volumes:
         - name: app-logs
           hostPath:
-            path: "/data/logs/go-template"
+            path: "/data/logs/ProxyHub"
       imagePullSecrets:
         - name: image-pull
       nodeSelector:
