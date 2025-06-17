@@ -15,11 +15,11 @@ import (
 	"testing"
 
 	"github.com/maxliu9403/ProxyHub/internal/common"
-	"github.com/maxliu9403/ProxyHub/internal/logic/proxy_group"
+	"github.com/maxliu9403/ProxyHub/internal/logic/group"
 )
 
 func TestGetDetail(t *testing.T) {
-	params, _ := json.Marshal(&proxy_group.IDParams{
+	params, _ := json.Marshal(&group.IDParams{
 		Test: common.Test{true},
 		ID:   1,
 	})

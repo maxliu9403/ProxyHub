@@ -17,7 +17,8 @@ import (
 )
 
 var AllTables = []interface{}{
-	&ProxyGroups{},
+	&Groups{},
+	&Proxy{},
 }
 
 // NewCreateDatabaseCommand is prepared for creating database when init project

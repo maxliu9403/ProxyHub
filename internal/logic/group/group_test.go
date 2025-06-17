@@ -5,7 +5,7 @@
 @Desc:
 */
 
-package proxy_group
+package group
 
 import (
 	"context"

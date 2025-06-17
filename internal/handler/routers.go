@@ -21,14 +21,27 @@ func RegisterRouter(tra opentracing.Tracer, group *gin.RouterGroup) {
 		group.Use(middleware.GinInterceptor(true))
 	}
 
-	proxyGroup := newProxyGroupController(common.BaseController{})
+	groupCtl := newGroupController(common.BaseController{})
 	// 注册分组管理路有
-	registerProxyGroupRouter(proxyGroup, group)
+	registerGroupRouter(groupCtl, group)
+
+	proxyCtl := newProxyController(common.BaseController{})
+	// 注册代理管理路有
+	registerProxyRouter(proxyCtl, group)
 }
 
-func registerProxyGroupRouter(proxyGroup *proxyGroupController, group *gin.RouterGroup) {
-	group.POST("/api/proxy_group/list", proxyGroup.GetList)
-	group.GET("/api/proxy_group/:id", proxyGroup.GetDetail)
-	group.DELETE("/api/proxy_group/delete", proxyGroup.Delete)
-	group.POST("/api/proxy_group", proxyGroup.Create)
+func registerGroupRouter(proxyGroup *groupController, group *gin.RouterGroup) {
+	group.POST("/api/group/list", proxyGroup.GetList)
+	group.GET("/api/group/:id", proxyGroup.GetDetail)
+	group.DELETE("/api/group/delete", proxyGroup.Delete)
+	group.POST("/api/group", proxyGroup.Create)
+	group.PUT("/api/group", proxyGroup.Update)
+}
+
+func registerProxyRouter(proxyGroup *proxyController, group *gin.RouterGroup) {
+	group.POST("/api/proxy/list", proxyGroup.GetList)
+	group.GET("/api/proxy/:id", proxyGroup.GetDetail)
+	group.DELETE("/api/proxy/delete", proxyGroup.Delete)
+	group.POST("/api/proxy", proxyGroup.Create)
+	group.PUT("/api/proxy", proxyGroup.Update)
 }

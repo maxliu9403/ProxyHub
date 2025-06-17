@@ -17,7 +17,7 @@ base:
     write_db_user: root
     write_db_password: 12345678
     write_db: proxy_hub
-    table_prefix:
+    table_prefix: tbl_
     max_idle_conns: 10
     max_open_conns: 1000
     logging: true

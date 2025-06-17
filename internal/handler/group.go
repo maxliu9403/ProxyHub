@@ -1,7 +1,7 @@
 /*
 @Date: 2025/6/17 18:56
 @Author: max.liu
-@File : proxy_group
+@File : group
 */
 
 package handler
@@ -16,15 +16,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxliu9403/ProxyHub/internal/common"
-	"github.com/maxliu9403/ProxyHub/internal/logic/proxy_group"
+	"github.com/maxliu9403/ProxyHub/internal/logic/group"
 )
 
-type proxyGroupController struct {
+type groupController struct {
 	common.BaseController
 }
 
-func newProxyGroupController(base common.BaseController) *proxyGroupController {
-	return &proxyGroupController{BaseController: base}
+func newGroupController(base common.BaseController) *groupController {
+	return &groupController{BaseController: base}
 }
 
 // GetList godoc
@@ -34,12 +34,12 @@ func newProxyGroupController(base common.BaseController) *proxyGroupController {
 // @Accept      json
 // @Produce     json
 // @Param   	params     	body    	types.BasicQuery     	false    "查询通用请求参数"
-// @Success     200     {object}        common.ResponseWithTotalCount{Data=[]models.ProxyGroups} "结果：{RetCode:code,Data:数据,Message:消息}"
+// @Success     200     {object}        common.ResponseWithTotalCount{Data=[]models.Groups} "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
-// @Router      /api/proxy_group/list [post]
-func (m *proxyGroupController) GetList(c *gin.Context) {
+// @Router      /api/group/list [post]
+func (m *groupController) GetList(c *gin.Context) {
 	var (
-		svc    proxy_group.Svc
+		svc    group.Svc
 		err    error
 		params types.BasicQuery
 	)
@@ -57,7 +57,7 @@ func (m *proxyGroupController) GetList(c *gin.Context) {
 	svc.Ctx = c
 	data, err := svc.GetList(params)
 	if data == nil || err != nil {
-		m.ResponseWithTotalCount(c, []models.ProxyGroups{}, data.Counts, common.NewErrorCode(common.ErrGetList, err))
+		m.ResponseWithTotalCount(c, []models.Groups{}, 0, common.NewErrorCode(common.ErrGetList, err))
 		return
 	}
 	m.ResponseWithTotalCount(c, data.Data, data.Counts, common.NewErrorCode(common.ErrGetList, err))
@@ -70,12 +70,12 @@ func (m *proxyGroupController) GetList(c *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Param       id   path     int  true  "分组ID"
-// @Success     200     {object}        common.Response{Data=models.ProxyGroups} "结果：{RetCode:code,Data:数据,Message:消息}"
+// @Success     200     {object}        common.Response{Data=models.Groups} "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
-// @Router      /api/proxy_group/{id} [get]
-func (m *proxyGroupController) GetDetail(c *gin.Context) {
+// @Router      /api/group/{id} [get]
+func (m *groupController) GetDetail(c *gin.Context) {
 	var (
-		svc proxy_group.Svc
+		svc group.Svc
 		err error
 	)
 
@@ -88,6 +88,7 @@ func (m *proxyGroupController) GetDetail(c *gin.Context) {
 
 	svc.Ctx = c
 	svc.ID = id
+	fmt.Println(svc.ID, "===")
 	resp, err := svc.Detail()
 	m.Response(c, resp, common.NewErrorCode(common.ErrGetDetail, err))
 }
@@ -98,15 +99,15 @@ func (m *proxyGroupController) GetDetail(c *gin.Context) {
 // @Tags        分组管理
 // @Accept      json
 // @Produce     json
-// @Param   	params     	body    	proxy_group.DeleteParams     	false    "删除请求参数"
+// @Param   	params     	body    	group.DeleteParams     	false    "删除请求参数"
 // @Success     200     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
-// @Router      /api/proxy_group/delete [delete]
-func (m *proxyGroupController) Delete(c *gin.Context) {
+// @Router      /api/group/delete [delete]
+func (m *groupController) Delete(c *gin.Context) {
 	var (
-		svc    proxy_group.Svc
+		svc    group.Svc
 		err    error
-		params proxy_group.DeleteParams
+		params group.DeleteParams
 	)
 
 	if !m.CheckParams(c, &params) {
@@ -116,7 +117,7 @@ func (m *proxyGroupController) Delete(c *gin.Context) {
 	svc.Ctx = c
 	svc.RunningTest = params.Test.Enable
 	err = svc.Delete(params)
-	m.Response(c, nil, common.NewErrorCode(common.ErrDelete, err))
+	m.Response(c, nil, common.NewErrorCode(common.ErrDeleteGroup, err))
 }
 
 // Create godoc
@@ -125,15 +126,15 @@ func (m *proxyGroupController) Delete(c *gin.Context) {
 // @Tags        分组管理
 // @Accept      json
 // @Produce     json
-// @Param       params  body  proxy_group.CreateParams  true  "创建参数"
-// @Success     200     {object}  common.Response{Data=models.ProxyGroups}  "结果：{RetCode:code,Data:数据,Message:消息}"
+// @Param       params  body  group.CreateParams  true  "创建参数"
+// @Success     200     {object}  common.Response{Data=models.Groups}  "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500     {object}  common.Response
-// @Router      /api/proxy_group [post]
-func (m *proxyGroupController) Create(c *gin.Context) {
+// @Router      /api/group [post]
+func (m *groupController) Create(c *gin.Context) {
 	var (
-		svc    proxy_group.Svc
+		svc    group.Svc
 		err    error
-		params proxy_group.CreateParams
+		params group.CreateParams
 	)
 
 	if !m.CheckParams(c, &params) {
@@ -144,5 +145,35 @@ func (m *proxyGroupController) Create(c *gin.Context) {
 	svc.RunningTest = params.Test.Enable
 
 	resp, err := svc.Create(params)
-	m.Response(c, resp, common.NewErrorCode(common.ErrCreate, err))
+	m.Response(c, resp, common.NewErrorCode(common.ErrCreateGroup, err))
 }
+
+// Update godoc
+// @Summary     更新分组
+// @Description 更新一个已有的代理分组
+// @Tags        分组管理
+// @Accept      json
+// @Produce     json
+// @Param       params  body  group.UpdateParams  true  "更新参数"
+// @Success     200     {object}  common.Response{Data=models.Groups}  "结果：{RetCode:code,Data:数据,Message:消息}"
+// @Failure     500     {object}  common.Response
+// @Router      /api/group [put]
+func (m *groupController) Update(c *gin.Context) {
+	var (
+		svc    group.Svc
+		err    error
+		params group.UpdateParams
+	)
+
+	if !m.CheckParams(c, &params) {
+		return
+	}
+
+	svc.Ctx = c
+	svc.RunningTest = params.Test.Enable
+
+	err = svc.Update(params)
+	m.Response(c, nil, common.NewErrorCode(common.ErrUpdateGroup, err))
+}
+
+// TODO 实现查询激活状态的Group

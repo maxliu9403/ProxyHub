@@ -9,6 +9,7 @@ package factory
 
 import (
 	"fmt"
+	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/ProxyHub/internal/types"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/repo"
@@ -19,15 +20,15 @@ import (
 	"strings"
 )
 
-type proxyGroupCrudImpl struct {
+type groupCrudImpl struct {
 	Conn *gorm.DB
 }
 
-func ProxyGroupsRepo(db *gorm.DB) repo.ProxyGroupsRepo {
-	return &proxyGroupCrudImpl{Conn: db}
+func GroupsRepo(db *gorm.DB) repo.GroupsRepo {
+	return &groupCrudImpl{Conn: db}
 }
 
-func (r *proxyGroupCrudImpl) GetList(q types.BasicQuery, model, list interface{}) (total int64, err error) {
+func (r *groupCrudImpl) GetList(q types.BasicQuery, model, list interface{}) (total int64, err error) {
 	db := r.Conn.Model(model)
 
 	// 指定字段
@@ -103,17 +104,33 @@ func (r *proxyGroupCrudImpl) GetList(q types.BasicQuery, model, list interface{}
 	return total, err
 }
 
-func (r *proxyGroupCrudImpl) GetByID(model interface{}, id int64) error {
+func (r *groupCrudImpl) GetByID(model interface{}, id int64) error {
 	crud := gormdb.NewCRUD(r.Conn)
 	err := crud.GetByID(model, id)
 	return err
 }
 
-func (r *proxyGroupCrudImpl) Deletes(ids []int64) (err error) {
-	err = r.Conn.Delete(&models.ProxyGroups{}, ids).Error
+func (r *groupCrudImpl) Deletes(ids []int64) (err error) {
+	err = r.Conn.Delete(&models.Groups{}, ids).Error
 	return err
 }
 
-func (r *proxyGroupCrudImpl) Create(group *models.ProxyGroups) error {
+func (r *groupCrudImpl) Create(group *models.Groups) error {
 	return r.Conn.Create(group).Error
+}
+
+func (r *groupCrudImpl) Update(id int64, fields map[string]interface{}) error {
+	return r.Conn.Model(&models.Groups{}).Where("id = ?", id).Updates(fields).Error
+}
+
+func (r *groupCrudImpl) ExistsActiveGroup(groupId int64) (bool, error) {
+	var count int64
+	err := r.Conn.Model(&models.Groups{}).Where("available = ? AND id = ?", common.AvailableGroup, groupId).Count(&count).Error
+	return count > 0, err
+}
+
+func (r *groupCrudImpl) IsGroupActive(groupID int64) (bool, error) {
+	var count int64
+	err := r.Conn.Model(&models.Groups{}).Where("id = ? AND available = ?", groupID, common.AvailableGroup).Count(&count).Error
+	return count > 0, err
 }
