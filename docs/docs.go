@@ -301,7 +301,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "MaxOnline": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "Name": {
                     "type": "string"
@@ -318,32 +318,16 @@ const docTemplate = `{
         "proxy_group.CreateParams": {
             "type": "object",
             "properties": {
-                "CreateTime": {
-                    "type": "integer"
-                },
-                "Creator": {
-                    "type": "string"
-                },
-                "Deleter": {
-                    "type": "string"
-                },
                 "Description": {
+                    "description": "描述",
                     "type": "string"
-                },
-                "Id": {
-                    "type": "integer"
                 },
                 "MaxOnline": {
-                    "type": "string"
-                },
-                "Name": {
-                    "type": "string"
-                },
-                "UpdateTime": {
-                    "description": "更新时间",
+                    "description": "该分组内的IP最大同时在线模拟器数",
                     "type": "integer"
                 },
-                "Updater": {
+                "Name": {
+                    "description": "组名",
                     "type": "string"
                 }
             }

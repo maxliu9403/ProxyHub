@@ -84,9 +84,9 @@ func (s *Svc) Delete(params DeleteParams) (err error) {
 
 type CreateParams struct {
 	common.Test
-	Name        string `json:"Name"`
-	MaxOnline   string `json:"MaxOnline"`
-	Description string `json:"Description"`
+	Name        string `json:"Name"`        // 组名
+	MaxOnline   int    `json:"MaxOnline"`   // 该分组内的IP最大同时在线模拟器数
+	Description string `json:"Description"` // 描述
 }
 
 func (p CreateParams) ToModel() *models.ProxyGroups {
