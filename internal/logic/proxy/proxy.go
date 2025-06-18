@@ -2,16 +2,16 @@ package proxy
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/maxliu9403/ProxyHub/internal/common"
+	"github.com/maxliu9403/ProxyHub/internal/logic"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/factory"
 	"github.com/maxliu9403/ProxyHub/models/repo"
 	"github.com/maxliu9403/common/gormdb"
 	"github.com/maxliu9403/common/logger"
 	"gorm.io/gorm"
-	"net"
-	"strings"
 )
 
 type Svc struct {
@@ -62,37 +62,38 @@ type CreateBatchResult struct {
 	InvalidProxies []*models.Proxy `json:"InvalidProxies" comment:"无效代理列表"`
 }
 
-func (s *Svc) CreateBatch(params CreateBatchParams) (*CreateBatchResult, error) {
+func (s *Svc) checkGroupID(groupID int64) (hasActiveGroup bool, err error) {
 	groupRepo := s.getGroupRepo()
 
 	// 校验是否存在激活分组
-	hasActiveGroup, err := groupRepo.ExistsActiveGroup(params.GroupID)
+	hasActiveGroup, err = groupRepo.ExistsActiveGroup(groupID)
 	if err != nil {
 		logger.ErrorfWithTrace(s.Ctx, "check active group failed: %s", err.Error())
-		return nil, common.NewErrorCode(common.ErrCreateProxyCheckGroup, fmt.Errorf("校验分组ID有效性失败"))
+		return hasActiveGroup, errors.New("校验分组ID有效性失败")
 	}
+	return
+}
+
+func (s *Svc) CreateBatch(params CreateBatchParams) (resp *CreateBatchResult, err error) {
+	hasActiveGroup, err := s.checkGroupID(params.GroupID)
+	if err != nil {
+		return nil, common.NewErrorCode(common.ErrCreateProxyCheckGroup, err)
+	}
+
 	if !hasActiveGroup {
 		return nil, common.NewErrorCode(common.ErrCreateProxyNotGroup, fmt.Errorf("当前分组ID不是激活状态，或者是不存在的激活ID"))
 	}
-	var (
-		validProxies []*models.Proxy
-		//
-		invalidProxies []*models.Proxy
-	)
+
+	invalidProxies := make([]*models.Proxy, 0)
+	validProxies := make([]*models.Proxy, 0)
 	// 用于存储转换后的模型
 	for _, p := range params.Proxies {
 		model := p.ToModel(params.GroupID)
-		if net.ParseIP(p.IP) == nil || strings.Contains(p.IP, ":") {
+		if !logic.CheckIP(p.IP) {
 			invalidProxies = append(invalidProxies, model)
 			continue
 		}
-		if p.Port <= 0 || p.Port > 65535 {
-			invalidProxies = append(invalidProxies, model)
-			continue
-		}
-
 		// TODO 实现并发校验ip的有效性
-		//invalidProxies = append(invalidProxies, model)
 		validProxies = append(validProxies, model)
 	}
 	// 如果一个合法的都没有
@@ -121,7 +122,7 @@ type UpdateParams struct {
 	Port     *int    `json:"Port,omitempty" binding:"omitempty,gt=0,lte=65535"`
 	Username *string `json:"Username,omitempty"`
 	Password *string `json:"Password,omitempty"`
-	GroupID  *int    `json:"GroupID,omitempty"`
+	GroupID  *int64  `json:"GroupID,omitempty"  binding:"omitempty,gt=0"`
 	Source   *string `json:"Source,omitempty"`
 	Enabled  *bool   `json:"Enabled,omitempty"`
 }
@@ -129,6 +130,10 @@ type UpdateParams struct {
 func (s *Svc) Update(params UpdateParams) error {
 	updateFields := map[string]interface{}{}
 	if params.IP != nil {
+		// 校验IP
+		if !logic.CheckIP(*params.IP) {
+			return errors.New("IP 不合法")
+		}
 		updateFields["ip"] = *params.IP
 	}
 	if params.Port != nil {
@@ -141,6 +146,14 @@ func (s *Svc) Update(params UpdateParams) error {
 		updateFields["password"] = *params.Password
 	}
 	if params.GroupID != nil {
+		// 校验GroupID是否合法
+		hasActiveGroup, err := s.checkGroupID(*params.GroupID)
+		if err != nil {
+			return err
+		}
+		if !hasActiveGroup {
+			return errors.New("当前分组ID不是激活状态")
+		}
 		updateFields["group_id"] = *params.GroupID
 	}
 	if params.Source != nil {
@@ -186,11 +199,11 @@ func (s *Svc) Detail() (*models.Proxy, error) {
 
 type DeleteParams struct {
 	common.Test
-	IDs []int64 `json:"IDs" binding:"required"`
+	IPs []string `json:"IPs" binding:"required"`
 }
 
 func (s *Svc) Delete(params DeleteParams) error {
-	err := s.getRepo().Deletes(params.IDs)
+	err := s.getRepo().DeletesByIps(params.IPs)
 	if err != nil {
 		logger.ErrorfWithTrace(s.Ctx, "delete proxies failed: %s", err.Error())
 		return common.NewErrorCode(common.ErrDeleteGroup, err)

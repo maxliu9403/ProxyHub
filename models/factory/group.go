@@ -134,3 +134,7 @@ func (r *groupCrudImpl) IsGroupActive(groupID int64) (bool, error) {
 	err := r.Conn.Model(&models.Groups{}).Where("id = ? AND available = ?", groupID, common.AvailableGroup).Count(&count).Error
 	return count > 0, err
 }
+
+func (r *groupCrudImpl) CreateBatch(groups []*models.Groups) error {
+	return r.Conn.Create(&groups).Error
+}

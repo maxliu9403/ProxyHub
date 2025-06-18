@@ -19,4 +19,5 @@ type ProxyRepo interface {
 	Create(group *models.Proxy) error
 	Update(id int64, fields map[string]interface{}) error
 	CreateBatch(proxies []*models.Proxy) error
+	DeletesByIps(IPs []string) error
 }

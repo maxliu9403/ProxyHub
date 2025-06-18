@@ -40,7 +40,7 @@ func registerGroupRouter(proxyGroup *groupController, group *gin.RouterGroup) {
 
 func registerProxyRouter(proxyGroup *proxyController, group *gin.RouterGroup) {
 	group.POST("/api/proxy/list", proxyGroup.GetList)
-	group.GET("/api/proxy/:id", proxyGroup.GetDetail)
+	group.POST("/api/proxy/detail", proxyGroup.GetDetail)
 	group.DELETE("/api/proxy/delete", proxyGroup.Delete)
 	group.POST("/api/proxy", proxyGroup.Create)
 	group.PUT("/api/proxy", proxyGroup.Update)

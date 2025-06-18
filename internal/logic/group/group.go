@@ -80,10 +80,14 @@ func (s *Svc) Delete(params DeleteParams) (err error) {
 
 type CreateParams struct {
 	common.Test
-	Name        string `json:"Name" binding:"required"`                // 组名
+	Name        string `json:"Name" binding:"required"`                // 组名，必须唯一
 	MaxOnline   int    `json:"MaxOnline" binding:"required,gt=0"`      // 该分组内的IP最大同时在线模拟器数，必须大于0
 	Description string `json:"Description"`                            // 描述
 	Available   int    `json:"Available" binding:"required,oneof=1 2"` // 是否激活，1:激活 2:不激活，默认是激活状态
+}
+
+type CreateGroupBatchParams struct {
+	Groups []CreateParams `json:"Groups" binding:"required"` // 分组列表，不能为空
 }
 
 func (p CreateParams) ToModel() *models.Groups {
@@ -95,15 +99,40 @@ func (p CreateParams) ToModel() *models.Groups {
 	}
 }
 
-func (s *Svc) Create(params CreateParams) (*models.Groups, error) {
-	group := params.ToModel()
-	err := s.getRepo().Create(group)
+type CreateBatchResp struct {
+	CreatedCount int            `json:"CreatedCount"`
+	InvalidGroup []CreateParams `json:"InvalidGroup"` // 校验失败
+}
+
+func (s *Svc) CreateBatch(params CreateGroupBatchParams) (*CreateBatchResp, error) {
+	invalidGroup := make([]CreateParams, 0)
+	toCreate := make([]*models.Groups, 0)
+	for _, p := range params.Groups {
+		if p.Name == "" {
+			invalidGroup = append(invalidGroup, p)
+			continue
+		}
+		model := p.ToModel()
+		toCreate = append(toCreate, model)
+	}
+
+	if len(toCreate) == 0 {
+		return &CreateBatchResp{
+			CreatedCount: 0,
+			InvalidGroup: invalidGroup,
+		}, nil
+	}
+
+	err := s.getRepo().CreateBatch(toCreate)
 	if err != nil {
-		logger.ErrorfWithTrace(s.Ctx, "create group failed: %s", err.Error())
+		logger.ErrorfWithTrace(s.Ctx, "batch create failed: %s", err.Error())
 		return nil, common.NewErrorCode(common.ErrCreateGroup, err)
 	}
 
-	return group, nil
+	return &CreateBatchResp{
+		CreatedCount: len(toCreate),
+		InvalidGroup: invalidGroup,
+	}, nil
 }
 
 type UpdateParams struct {

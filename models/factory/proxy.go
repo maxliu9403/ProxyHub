@@ -16,6 +16,7 @@ import (
 	"github.com/maxliu9403/common/rsql"
 	"gorm.io/gorm"
 	"strings"
+	"time"
 )
 
 type proxyCrudImpl struct {
@@ -49,7 +50,6 @@ func (r *proxyCrudImpl) GetList(q models.GetListParams, model, list interface{})
 		fields := gadget.FieldsFromModel(model, db, true).GetStringField()
 		db.Scopes(gormdb.KeywordGenerator(fields, q.Keyword))
 	}
-	// 精确字段匹配（IP、Port、GroupID、Enabled）
 	if len(q.IPs) > 0 {
 		db.Where("ip IN ?", q.IPs)
 	}
@@ -125,18 +125,24 @@ func (r *proxyCrudImpl) GetByID(model interface{}, id int64) error {
 }
 
 func (r *proxyCrudImpl) Deletes(ids []int64) (err error) {
-	err = r.Conn.Delete(&models.Groups{}, ids).Error
+	err = r.Conn.Delete(&models.Proxy{}, ids).Error
 	return err
 }
 
-func (r *proxyCrudImpl) Create(group *models.Proxy) error {
-	return r.Conn.Create(group).Error
+func (r *proxyCrudImpl) Create(proxy *models.Proxy) error {
+	return r.Conn.Create(proxy).Error
 }
 
 func (r *proxyCrudImpl) Update(id int64, fields map[string]interface{}) error {
-	return r.Conn.Model(&models.Groups{}).Where("id = ?", id).Updates(fields).Error
+	return r.Conn.Model(&models.Proxy{}).Where("id = ?", id).Updates(fields).Error
 }
 
 func (r *proxyCrudImpl) CreateBatch(proxies []*models.Proxy) error {
 	return r.Conn.Create(&proxies).Error
+}
+
+func (r *proxyCrudImpl) DeletesByIps(IPs []string) error {
+	return r.Conn.Model(&models.Proxy{}).
+		Where("ip IN ?", IPs).
+		Update("delete_time", time.Now()).Error
 }

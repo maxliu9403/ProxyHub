@@ -126,7 +126,7 @@ func (m *groupController) Delete(c *gin.Context) {
 // @Tags        分组管理
 // @Accept      json
 // @Produce     json
-// @Param       params  body  group.CreateParams  true  "创建参数"
+// @Param       params  body  group.CreateGroupBatchParams  true  "创建参数"
 // @Success     200     {object}  common.Response{Data=models.Groups}  "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500     {object}  common.Response
 // @Router      /api/group [post]
@@ -134,7 +134,7 @@ func (m *groupController) Create(c *gin.Context) {
 	var (
 		svc    group.Svc
 		err    error
-		params group.CreateParams
+		params group.CreateGroupBatchParams
 	)
 
 	if !m.CheckParams(c, &params) {
@@ -142,9 +142,7 @@ func (m *groupController) Create(c *gin.Context) {
 	}
 
 	svc.Ctx = c
-	svc.RunningTest = params.Test.Enable
-
-	resp, err := svc.Create(params)
+	resp, err := svc.CreateBatch(params)
 	m.Response(c, resp, common.NewErrorCode(common.ErrCreateGroup, err))
 }
 
