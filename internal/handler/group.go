@@ -31,6 +31,7 @@ func newGroupController(base common.BaseController) *groupController {
 // @Summary     获取分组列表
 // @Description 获取分组列表
 // @Tags        分组管理
+// @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
 // @Param   	params     	body    	types.BasicQuery     	false    "查询通用请求参数"
@@ -67,6 +68,7 @@ func (m *groupController) GetList(c *gin.Context) {
 // @Summary     获取分组详情
 // @Description 获取分组详情
 // @Tags        分组管理
+// @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
 // @Param       id   path     int  true  "分组ID"
@@ -88,7 +90,6 @@ func (m *groupController) GetDetail(c *gin.Context) {
 
 	svc.Ctx = c
 	svc.ID = id
-	fmt.Println(svc.ID, "===")
 	resp, err := svc.Detail()
 	m.Response(c, resp, common.NewErrorCode(common.ErrGetDetail, err))
 }
@@ -97,6 +98,7 @@ func (m *groupController) GetDetail(c *gin.Context) {
 // @Summary     删除分组
 // @Description 删除分组
 // @Tags        分组管理
+// @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
 // @Param   	params     	body    	group.DeleteParams     	false    "删除请求参数"
@@ -124,6 +126,7 @@ func (m *groupController) Delete(c *gin.Context) {
 // @Summary     创建分组
 // @Description 创建一个新的代理分组
 // @Tags        分组管理
+// @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
 // @Param       params  body  group.CreateGroupBatchParams  true  "创建参数"
@@ -150,6 +153,7 @@ func (m *groupController) Create(c *gin.Context) {
 // @Summary     更新分组
 // @Description 更新一个已有的代理分组
 // @Tags        分组管理
+// @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
 // @Param       params  body  group.UpdateParams  true  "更新参数"
@@ -173,5 +177,3 @@ func (m *groupController) Update(c *gin.Context) {
 	err = svc.Update(params)
 	m.Response(c, nil, common.NewErrorCode(common.ErrUpdateGroup, err))
 }
-
-// TODO 实现查询激活状态的Group

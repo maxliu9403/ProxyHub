@@ -15,8 +15,12 @@ import (
 
 // @title        ProxyHub
 // @version      1.0
-// @description  a template
+// @description  ProxyHub
 // @BasePath     /
+
+// @securityDefinitions.apikey AdminTokenAuth
+// @in header
+// @name Authorization
 
 // @license.name  Apache 2.0
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html

@@ -7,7 +7,7 @@ require (
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
 	github.com/go-playground/validator/v10 v10.4.1
-	github.com/maxliu9403/common v1.0.5
+	github.com/maxliu9403/common v1.0.6
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/spf13/cobra v1.2.1
 	github.com/swaggo/swag v1.16.4

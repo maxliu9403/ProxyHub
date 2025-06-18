@@ -30,6 +30,10 @@ const (
 	ErrDeleteProxy
 	ErrCreateProxyNotGroup
 	ErrCreateProxyCheckGroup
+	ErrCreateToken
+	ErrBuildToken
+	ErrDeleteToken
+	ErrValidateToken
 )
 
 var codeMsg = map[RetCode]string{
@@ -53,6 +57,10 @@ var codeMsg = map[RetCode]string{
 	ErrDeleteProxy:           "删除代理失败",
 	ErrCreateProxyNotGroup:   "创建代理失败，不存在激活状态的分组，请先创建分组",
 	ErrCreateProxyCheckGroup: "创建代理失败，校验是否存在分组失败",
+	ErrCreateToken:           "创建Token失败",
+	ErrBuildToken:            "随机生成Token失败",
+	ErrDeleteToken:           "删除Token失败",
+	ErrValidateToken:         "校验Token失败",
 }
 
 func GetMsg(code RetCode) string {

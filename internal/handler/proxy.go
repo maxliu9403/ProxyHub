@@ -25,6 +25,7 @@ func newProxyController(base common.BaseController) *proxyController {
 // @Summary     获取代理列表
 // @Description 支持分页与多条件查询
 // @Tags        代理管理
+// @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
 // @Param       params body models.GetListParams false "查询参数"
@@ -58,6 +59,7 @@ func (m *proxyController) GetList(c *gin.Context) {
 // @Summary     获取代理详情
 // @Description 通过 IP 列表获取代理信息
 // @Tags        代理管理
+// @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
 // @Param       params  body  proxy.GetDetailParams  true  "请求参数"
@@ -84,6 +86,7 @@ func (m *proxyController) GetDetail(c *gin.Context) {
 // @Summary     批量创建代理
 // @Description 创建一个或多个新的代理IP记录
 // @Tags        代理管理
+// @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
 // @Param       params  body  proxy.CreateBatchParams  true  "创建参数数组"
@@ -111,6 +114,7 @@ func (m *proxyController) Create(c *gin.Context) {
 // @Summary     更新代理
 // @Description 更新代理信息
 // @Tags        代理管理
+// @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
 // @Param       params  body  proxy.UpdateParams  true  "更新参数"
@@ -139,6 +143,7 @@ func (m *proxyController) Update(c *gin.Context) {
 // @Summary     删除代理
 // @Description 删除一个或多个代理
 // @Tags        代理管理
+// @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
 // @Param       params  body  proxy.DeleteParams  true  "删除请求参数"
