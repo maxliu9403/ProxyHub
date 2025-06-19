@@ -1,0 +1,18 @@
+package repo
+
+import (
+	"github.com/maxliu9403/ProxyHub/internal/types"
+	"github.com/maxliu9403/ProxyHub/models"
+	"github.com/maxliu9403/common/gormdb"
+)
+
+type EmulatorRepo interface {
+	gormdb.GetByIDCrud
+	GetList(q types.BasicQuery, model, list interface{}) (total int64, err error)
+	Create(group *models.Emulator) error
+	Update(uuid string, fields map[string]interface{}) error
+	CreateBatch([]*models.Emulator) error
+	DeletesByUuids(uuids []string) error
+	GetByUuid(model interface{}, uuid string) error
+	GetExistingUUIDs(uuids []string) ([]string, error)
+}

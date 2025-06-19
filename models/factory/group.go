@@ -9,6 +9,8 @@ package factory
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/ProxyHub/internal/types"
 	"github.com/maxliu9403/ProxyHub/models"
@@ -17,7 +19,6 @@ import (
 	"github.com/maxliu9403/common/gormdb"
 	"github.com/maxliu9403/common/rsql"
 	"gorm.io/gorm"
-	"strings"
 )
 
 type groupCrudImpl struct {

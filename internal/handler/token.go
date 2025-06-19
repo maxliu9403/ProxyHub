@@ -8,12 +8,13 @@ package handler
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/ProxyHub/internal/logic/token"
 	"github.com/maxliu9403/ProxyHub/internal/types"
 	"github.com/maxliu9403/ProxyHub/models"
-	"strings"
 )
 
 type tokenController struct {
@@ -61,7 +62,7 @@ func (m *tokenController) Create(c *gin.Context) {
 // @Param       params  body  token.DeleteToken  true  "删除参数"
 // @Success     200 {object}  common.Response
 // @Failure     500 {object}  common.Response
-// @Router      /api/token/delete [delete]
+// @Router      /api/token [delete]
 func (m *tokenController) Delete(c *gin.Context) {
 	var (
 		svc    token.Svc
@@ -88,7 +89,7 @@ func (m *tokenController) Delete(c *gin.Context) {
 // @Param   	params     	body    	types.BasicQuery     	false    "查询通用请求参数"
 // @Success     200 {object}  common.Response{Data=[]models.Token}
 // @Failure     500 {object}  common.Response
-// @Router      /api/token/list [post]
+// @Router      /api/token/search [post]
 func (m *tokenController) GetList(c *gin.Context) {
 	var (
 		svc    token.Svc
@@ -118,7 +119,7 @@ func (m *tokenController) GetList(c *gin.Context) {
 // Validate godoc
 // @Summary     校验 Token
 // @Description 校验 Token 是否有效（用于订阅接口）
-// @Tags        Token 校验
+// @Tags        Token 管理
 // @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json

@@ -20,4 +20,5 @@ type ProxyRepo interface {
 	Update(id int64, fields map[string]interface{}) error
 	CreateBatch(proxies []*models.Proxy) error
 	DeletesByIps(IPs []string) error
+	GetByIP(ip string) (*models.Proxy, error)
 }

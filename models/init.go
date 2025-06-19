@@ -20,6 +20,7 @@ var AllTables = []interface{}{
 	&Groups{},
 	&Proxy{},
 	&Token{},
+	&Emulator{},
 }
 
 // NewCreateDatabaseCommand is prepared for creating database when init project

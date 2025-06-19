@@ -2,7 +2,9 @@ package group
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
 	"github.com/maxliu9403/ProxyHub/internal/types"
 
 	"github.com/maxliu9403/ProxyHub/internal/common"
@@ -16,7 +18,6 @@ import (
 
 type Svc struct {
 	ID          int64
-	AccountID   string
 	Ctx         context.Context
 	RunningTest bool
 	DB          *gorm.DB
@@ -25,6 +26,18 @@ type Svc struct {
 func (s *Svc) getRepo() repo.GroupsRepo {
 	s.DB = gormdb.Cli(s.Ctx)
 	return factory.GroupsRepo(s.DB)
+}
+
+func (s *Svc) CheckGroupID(groupID int64) (hasActiveGroup bool, err error) {
+	groupRepo := s.getRepo()
+
+	// 校验是否存在激活分组
+	hasActiveGroup, err = groupRepo.ExistsActiveGroup(groupID)
+	if err != nil {
+		logger.ErrorfWithTrace(s.Ctx, "check active group failed: %s", err.Error())
+		return hasActiveGroup, errors.New("校验分组ID有效性失败")
+	}
+	return
 }
 
 func (s *Svc) GetList(q types.BasicQuery) (data *common.ListData, err error) {

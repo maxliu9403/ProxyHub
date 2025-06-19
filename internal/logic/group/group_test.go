@@ -9,8 +9,9 @@ package group
 
 import (
 	"context"
-	"github.com/maxliu9403/ProxyHub/internal/types"
 	"testing"
+
+	"github.com/maxliu9403/ProxyHub/internal/types"
 )
 
 var s = Svc{

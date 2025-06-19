@@ -3,6 +3,9 @@ package factory
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/maxliu9403/ProxyHub/internal/types"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/repo"
@@ -10,8 +13,6 @@ import (
 	"github.com/maxliu9403/common/gormdb"
 	"github.com/maxliu9403/common/rsql"
 	"gorm.io/gorm"
-	"strings"
-	"time"
 )
 
 type tokenCrudImpl struct {

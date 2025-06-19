@@ -3,9 +3,12 @@ package proxy
 import (
 	"context"
 	"errors"
+
 	"fmt"
+
 	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/ProxyHub/internal/logic"
+	"github.com/maxliu9403/ProxyHub/internal/logic/group"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/factory"
 	"github.com/maxliu9403/ProxyHub/models/repo"
@@ -32,12 +35,13 @@ func (s *Svc) getGroupRepo() repo.GroupsRepo {
 }
 
 type CreateParams struct {
-	IP       string `json:"IP" binding:"required,ip"`
-	Port     int64  `json:"Port,omitempty" binding:"omitempty,gt=0,lte=65535"`
-	Username string `json:"Username" binding:"required"`
-	Password string `json:"Password" binding:"required"`
-	Source   string `json:"Source" binding:"required"`
-	Enabled  *bool  `json:"Enabled"` // 可选字段，默认 true
+	IP        string `json:"IP" binding:"required,ip"`
+	Port      int64  `json:"Port,omitempty" binding:"omitempty,gt=0,lte=65535"`
+	Username  string `json:"Username" binding:"required"`
+	Password  string `json:"Password" binding:"required"`
+	Source    string `json:"Source" binding:"required"`
+	Enabled   *bool  `json:"Enabled"` // 可选字段，默认 true
+	ProxyType string `json:"ProxyType" binding:"required"`
 }
 
 type CreateBatchParams struct {
@@ -47,35 +51,30 @@ type CreateBatchParams struct {
 
 func (p CreateParams) ToModel(groupID int64) *models.Proxy {
 	return &models.Proxy{
-		IP:       p.IP,
-		Port:     p.Port,
-		Username: p.Username,
-		Password: p.Password,
-		Source:   p.Source,
-		GroupID:  groupID,
-		Enabled:  p.Enabled != nil && *p.Enabled,
+		IP:        p.IP,
+		Port:      p.Port,
+		Username:  p.Username,
+		ProxyType: p.ProxyType,
+		Password:  p.Password,
+		Source:    p.Source,
+		GroupID:   groupID,
+		Enabled:   p.Enabled != nil && *p.Enabled,
 	}
+}
+
+type Invalid struct {
+	IP      int64  `json:"IP"`
+	Message string `json:"Message"` // 错误信息
 }
 
 type CreateBatchResult struct {
-	CreatedCount   int             `json:"CreatedCount" comment:"成功创建数量"`
-	InvalidProxies []*models.Proxy `json:"InvalidProxies" comment:"无效代理列表"`
-}
-
-func (s *Svc) checkGroupID(groupID int64) (hasActiveGroup bool, err error) {
-	groupRepo := s.getGroupRepo()
-
-	// 校验是否存在激活分组
-	hasActiveGroup, err = groupRepo.ExistsActiveGroup(groupID)
-	if err != nil {
-		logger.ErrorfWithTrace(s.Ctx, "check active group failed: %s", err.Error())
-		return hasActiveGroup, errors.New("校验分组ID有效性失败")
-	}
-	return
+	CreatedCount   int       `json:"CreatedCount" comment:"成功创建数量"`
+	InvalidProxies []Invalid `json:"InvalidProxies" comment:"无效代理列表"`
 }
 
 func (s *Svc) CreateBatch(params CreateBatchParams) (resp *CreateBatchResult, err error) {
-	hasActiveGroup, err := s.checkGroupID(params.GroupID)
+	groupAPI := group.NewGroupAPI(s.Ctx)
+	hasActiveGroup, err := groupAPI.CheckGroupID(params.GroupID)
 	if err != nil {
 		return nil, common.NewErrorCode(common.ErrCreateProxyCheckGroup, err)
 	}
@@ -84,15 +83,11 @@ func (s *Svc) CreateBatch(params CreateBatchParams) (resp *CreateBatchResult, er
 		return nil, common.NewErrorCode(common.ErrCreateProxyNotGroup, fmt.Errorf("当前分组ID不是激活状态，或者是不存在的激活ID"))
 	}
 
-	invalidProxies := make([]*models.Proxy, 0)
+	invalidProxies := make([]Invalid, 0)
 	validProxies := make([]*models.Proxy, 0)
 	// 用于存储转换后的模型
 	for _, p := range params.Proxies {
 		model := p.ToModel(params.GroupID)
-		if !logic.CheckIP(p.IP) {
-			invalidProxies = append(invalidProxies, model)
-			continue
-		}
 		// TODO 实现并发校验ip的有效性
 		validProxies = append(validProxies, model)
 	}
@@ -117,14 +112,15 @@ func (s *Svc) CreateBatch(params CreateBatchParams) (resp *CreateBatchResult, er
 
 type UpdateParams struct {
 	common.Test
-	ID       int64   `json:"ID" binding:"required"`
-	IP       *string `json:"IP,omitempty" binding:"omitempty,ip"`
-	Port     *int    `json:"Port,omitempty" binding:"omitempty,gt=0,lte=65535"`
-	Username *string `json:"Username,omitempty"`
-	Password *string `json:"Password,omitempty"`
-	GroupID  *int64  `json:"GroupID,omitempty"  binding:"omitempty,gt=0"`
-	Source   *string `json:"Source,omitempty"`
-	Enabled  *bool   `json:"Enabled,omitempty"`
+	ID        int64   `json:"ID" binding:"required"`
+	IP        *string `json:"IP,omitempty" binding:"omitempty,ip"`
+	Port      *int    `json:"Port,omitempty" binding:"omitempty,gt=0,lte=65535"`
+	Username  *string `json:"Username,omitempty"`
+	Password  *string `json:"Password,omitempty"`
+	GroupID   *int64  `json:"GroupID,omitempty"  binding:"omitempty,gt=0"`
+	Source    *string `json:"Source,omitempty"`
+	Enabled   *bool   `json:"Enabled,omitempty"`
+	ProxyType *string `json:"ProxyType,omitempty"`
 }
 
 func (s *Svc) Update(params UpdateParams) error {
@@ -147,7 +143,8 @@ func (s *Svc) Update(params UpdateParams) error {
 	}
 	if params.GroupID != nil {
 		// 校验GroupID是否合法
-		hasActiveGroup, err := s.checkGroupID(*params.GroupID)
+		groupAPI := group.NewGroupAPI(s.Ctx)
+		hasActiveGroup, err := groupAPI.CheckGroupID(*params.GroupID)
 		if err != nil {
 			return err
 		}
@@ -161,6 +158,9 @@ func (s *Svc) Update(params UpdateParams) error {
 	}
 	if params.Enabled != nil {
 		updateFields["enabled"] = *params.Enabled
+	}
+	if params.ProxyType != nil {
+		updateFields["proxy_type"] = *params.ProxyType
 	}
 
 	err := s.getRepo().Update(params.ID, updateFields)
@@ -211,10 +211,6 @@ func (s *Svc) Delete(params DeleteParams) error {
 	return nil
 }
 
-type GetDetailParams struct {
-	IPs []string `json:"IPs" binding:"required,min=1,dive,ip"` // 限定至少一个合法 IP
-}
-
 func (s *Svc) GetByIPs(ips []string) ([]models.Proxy, error) {
 	if len(ips) == 0 {
 		return nil, nil
@@ -232,4 +228,12 @@ func (s *Svc) GetByIPs(ips []string) ([]models.Proxy, error) {
 	}
 
 	return list, nil
+}
+
+func (s *Svc) GetByIP(ip string) (*models.Proxy, error) {
+	proxy, err := s.getRepo().GetByIP(ip)
+	if err != nil {
+		return nil, err
+	}
+	return proxy, nil
 }

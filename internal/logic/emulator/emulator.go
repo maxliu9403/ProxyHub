@@ -1,0 +1,234 @@
+package emulator
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/maxliu9403/ProxyHub/internal/logic"
+	"github.com/maxliu9403/ProxyHub/internal/logic/group"
+	"github.com/maxliu9403/ProxyHub/internal/types"
+
+	"github.com/maxliu9403/ProxyHub/internal/common"
+	"github.com/maxliu9403/ProxyHub/models"
+	"github.com/maxliu9403/ProxyHub/models/factory"
+	"github.com/maxliu9403/ProxyHub/models/repo"
+	"github.com/maxliu9403/common/gormdb"
+	"github.com/maxliu9403/common/logger"
+	"gorm.io/gorm"
+)
+
+type Svc struct {
+	ID          int64
+	Ctx         context.Context
+	RunningTest bool
+	DB          *gorm.DB
+}
+
+func (s *Svc) getRepo() repo.EmulatorRepo {
+	s.DB = gormdb.Cli(s.Ctx)
+	return factory.EmulatorRepo(s.DB)
+}
+
+func (s *Svc) GetList(q types.BasicQuery) (data *common.ListData, err error) {
+	data = &common.ListData{}
+
+	crud := s.getRepo()
+	table := &models.Emulator{}
+	demoList := make([]models.Emulator, 0)
+	total, err := crud.GetList(q, table, &demoList)
+	if err != nil {
+		logger.ErrorfWithTrace(s.Ctx, "query list failed: %s", err.Error())
+		return data, common.NewErrorCode(common.ErrGetList, err)
+	}
+
+	data.Counts = total
+	data.Data = demoList
+
+	return data, err
+}
+
+type IDParams struct {
+	common.Test
+	ID int64 `json:"Id" binding:"required"` // 主键 ID
+}
+
+func (s *Svc) Detail(uuid string) (resp *models.Emulator, err error) {
+	crud := s.getRepo()
+	pg := &models.Emulator{}
+	err = crud.GetByUuid(pg, uuid)
+	if err != nil {
+		logger.ErrorfWithTrace(s.Ctx, "get %d from db failed: %s", s.ID, err.Error())
+		return resp, common.NewErrorCode(common.ErrGetDetail, fmt.Errorf("查询 ID [%d] 详情失败", s.ID))
+	}
+
+	return pg, err
+}
+
+type DeleteParams struct {
+	common.Test
+	Uuids []string `json:"Uuids" binding:"required"` // 待删除 ID 列表
+}
+
+func (s *Svc) Delete(params DeleteParams) (err error) {
+	crud := s.getRepo()
+	err = crud.DeletesByUuids(params.Uuids)
+	if err != nil {
+		logger.ErrorfWithTrace(s.Ctx, "delete %d failed: %s", params.Uuids, err.Error())
+		return common.NewErrorCode(common.ErrDeleteEmulator, err)
+	}
+
+	return err
+}
+
+type CreateParams struct {
+	common.Test
+	BrowserID string `json:"BrowserID" binding:"required,gt=0"` // 窗口ID
+	UUID      string `json:"Uuid" binding:"required"`           // 模拟器uuid
+	GroupID   int64  `json:"GroupID" binding:"required"`        // 组ID
+}
+
+type CreateBatchParams struct {
+	Emulators []CreateParams `json:"Emulators" binding:"required"` // 多个模拟器
+}
+
+func (p CreateParams) ToModel() *models.Emulator {
+	return &models.Emulator{
+		UUID:      p.UUID,
+		BrowserID: p.BrowserID,
+		GroupID:   p.GroupID,
+	}
+}
+
+type Invalid struct {
+	BrowserID string `json:"BrowserID"` // 窗口ID
+	UUID      string `json:"Uuid"`      // 模拟器uuid
+	GroupID   int64  `json:"GroupID"`   // 组ID
+	Message   string
+}
+
+type CreateBatchResp struct {
+	CreatedCount    int       `json:"CreatedCount"`
+	InvalidEmulator []Invalid `json:"InvalidEmulator"` // 校验失败
+}
+
+// CreateBatch 只创建新的，如果uuid已经存在则跳过处理
+func (s *Svc) CreateBatch(params CreateBatchParams) (*CreateBatchResp, error) {
+	invalidEmulator := make([]Invalid, 0)
+	toCreate := make([]*models.Emulator, 0)
+
+	// 收集所有 UUID
+	uuidMap := make(map[string]CreateParams)
+	uuidList := make([]string, 0, len(params.Emulators))
+	for _, p := range params.Emulators {
+
+		if p.UUID == "" {
+			invalidEmulator = append(invalidEmulator,
+				Invalid{BrowserID: p.BrowserID,
+					UUID:    p.UUID,
+					GroupID: p.GroupID,
+					Message: "uuid为空",
+				})
+			continue
+		}
+		// 校验group_id是否合法
+		groupAPI := group.NewGroupAPI(s.Ctx)
+		hasActiveGroup, err := groupAPI.CheckGroupID(p.GroupID)
+		if err != nil {
+
+			invalidEmulator = append(invalidEmulator,
+				Invalid{BrowserID: p.BrowserID,
+					UUID:    p.UUID,
+					GroupID: p.GroupID,
+					Message: "校验group id合法性失败",
+				})
+			logger.ErrorfWithTrace(s.Ctx, "check group id failed: %s", err.Error())
+			continue
+		}
+		if !hasActiveGroup {
+			invalidEmulator = append(invalidEmulator,
+				Invalid{BrowserID: p.BrowserID,
+					UUID:    p.UUID,
+					GroupID: p.GroupID,
+					Message: "group id不是有效值，可能不存在或者未激活",
+				})
+			continue
+		}
+		uuidMap[p.UUID] = p
+		uuidList = append(uuidList, p.UUID)
+	}
+
+	// 查询已存在的 UUID
+	existUUIDs, err := s.getRepo().GetExistingUUIDs(uuidList)
+	if err != nil {
+		logger.ErrorfWithTrace(s.Ctx, "query exist UUIDs failed: %s", err.Error())
+		return nil, common.NewErrorCode(common.ErrQueryExistEmulatorUUID, err)
+	}
+	existSet := make(map[string]struct{}, len(existUUIDs))
+	for _, uuid := range existUUIDs {
+		existSet[uuid] = struct{}{}
+	}
+
+	// 构建待创建模型
+	for uuid, p := range uuidMap {
+		if _, exists := existSet[uuid]; exists {
+			continue // 已存在则跳过
+		}
+		toCreate = append(toCreate, p.ToModel())
+	}
+
+	if len(toCreate) == 0 {
+		return &CreateBatchResp{
+			CreatedCount:    0,
+			InvalidEmulator: invalidEmulator,
+		}, nil
+	}
+
+	err = s.getRepo().CreateBatch(toCreate)
+	if err != nil {
+		logger.ErrorfWithTrace(s.Ctx, "batch create failed: %s", err.Error())
+		return nil, common.NewErrorCode(common.ErrCreateEmulator, err)
+	}
+
+	return &CreateBatchResp{
+		CreatedCount:    len(toCreate),
+		InvalidEmulator: invalidEmulator,
+	}, nil
+}
+
+type UpdateParams struct {
+	common.Test
+	UUID    string  `json:"UUID" binding:"required"`
+	IP      *string `json:"IP,omitempty" binding:"omitempty,ip"`
+	GroupID *int64  `json:"GroupID,omitempty"  binding:"omitempty,gt=0"`
+}
+
+func (s *Svc) Update(params UpdateParams) error {
+	updateFields := map[string]interface{}{}
+	if params.IP != nil {
+		// 校验IP
+		if !logic.CheckIP(*params.IP) {
+			return errors.New("IP 不合法")
+		}
+		updateFields["ip"] = *params.IP
+	}
+	if params.GroupID != nil {
+		// 校验GroupID是否合法
+		groupAPI := group.NewGroupAPI(s.Ctx)
+		hasActiveGroup, err := groupAPI.CheckGroupID(*params.GroupID)
+		if err != nil {
+			return err
+		}
+		if !hasActiveGroup {
+			return errors.New("当前分组ID不是激活状态")
+		}
+		updateFields["group_id"] = *params.GroupID
+	}
+	err := s.getRepo().Update(params.UUID, updateFields)
+	if err != nil {
+		logger.ErrorfWithTrace(s.Ctx, "update group failed: %s", err.Error())
+		return common.NewErrorCode(common.ErrUpdateGroup, err)
+	}
+
+	return nil
+}

@@ -7,6 +7,8 @@
 package handler
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/ProxyHub/internal/logic/proxy"
@@ -31,7 +33,7 @@ func newProxyController(base common.BaseController) *proxyController {
 // @Param       params body models.GetListParams false "查询参数"
 // @Success     200 {object} common.ResponseWithTotalCount{Data=[]models.Proxy} "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500 {object} common.Response
-// @Router      /api/proxy/list [post]
+// @Router      /api/proxy/search [post]
 func (m *proxyController) GetList(c *gin.Context) {
 	var (
 		svc    proxy.Svc
@@ -55,31 +57,27 @@ func (m *proxyController) GetList(c *gin.Context) {
 	m.ResponseWithTotalCount(c, resp.Data, resp.Counts, nil)
 }
 
-// GetDetail godoc
+// Detail godoc
 // @Summary     获取代理详情
-// @Description 通过 IP 列表获取代理信息
+// @Description 通过 IP 获取代理信息（单个）
 // @Tags        代理管理
 // @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
-// @Param       params  body  proxy.GetDetailParams  true  "请求参数"
-// @Success     200  {object}  common.Response{Data=[]models.Proxy}
+// @Param       ip   path     string  true  "代理 IP"
+// @Success     200  {object}  common.Response{Data=models.Proxy}
 // @Failure     500  {object}  common.Response
-// @Router      /api/proxy/detail [post]
-func (m *proxyController) GetDetail(c *gin.Context) {
-	var (
-		svc    proxy.Svc
-		err    error
-		params proxy.GetDetailParams
-	)
-
-	if !m.CheckParams(c, &params) {
+// @Router      /api/proxy/{ip} [get]
+func (m *proxyController) Detail(c *gin.Context) {
+	ip := c.Param("ip")
+	if ip == "" {
+		m.Response(c, nil, common.NewErrorCode(common.ErrInvalidParams, fmt.Errorf("无效的ID参数")))
 		return
 	}
 
-	svc.Ctx = c
-	list, err := svc.GetByIPs(params.IPs)
-	m.Response(c, list, common.NewErrorCode(common.ErrGetDetail, err))
+	svc := proxy.Svc{Ctx: c}
+	proxyItem, err := svc.GetByIP(ip)
+	m.Response(c, proxyItem, common.NewErrorCode(common.ErrGetDetail, err))
 }
 
 // Create godoc
@@ -149,7 +147,7 @@ func (m *proxyController) Update(c *gin.Context) {
 // @Param       params  body  proxy.DeleteParams  true  "删除请求参数"
 // @Success     200     {object}  common.Response
 // @Failure     500     {object}  common.Response
-// @Router      /api/proxy/delete [delete]
+// @Router      /api/proxy [delete]
 func (m *proxyController) Delete(c *gin.Context) {
 	var (
 		svc    proxy.Svc

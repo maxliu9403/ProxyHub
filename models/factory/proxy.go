@@ -9,14 +9,15 @@ package factory
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/repo"
 	"github.com/maxliu9403/common/gadget"
 	"github.com/maxliu9403/common/gormdb"
 	"github.com/maxliu9403/common/rsql"
 	"gorm.io/gorm"
-	"strings"
-	"time"
 )
 
 type proxyCrudImpl struct {
@@ -145,4 +146,10 @@ func (r *proxyCrudImpl) DeletesByIps(IPs []string) error {
 	return r.Conn.Model(&models.Proxy{}).
 		Where("ip IN ?", IPs).
 		Update("delete_time", time.Now()).Error
+}
+
+func (r *proxyCrudImpl) GetByIP(ip string) (*models.Proxy, error) {
+	proxy := &models.Proxy{}
+	err := r.Conn.Where("ip = ?", ip).First(proxy).Error
+	return proxy, err
 }

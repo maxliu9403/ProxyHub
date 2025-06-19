@@ -8,9 +8,10 @@ package handler
 
 import (
 	"fmt"
-	"github.com/maxliu9403/ProxyHub/internal/types"
 	"strconv"
 	"strings"
+
+	"github.com/maxliu9403/ProxyHub/internal/types"
 
 	"github.com/maxliu9403/ProxyHub/models"
 
@@ -37,7 +38,7 @@ func newGroupController(base common.BaseController) *groupController {
 // @Param   	params     	body    	types.BasicQuery     	false    "查询通用请求参数"
 // @Success     200     {object}        common.ResponseWithTotalCount{Data=[]models.Groups} "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
-// @Router      /api/group/list [post]
+// @Router      /api/group/search [post]
 func (m *groupController) GetList(c *gin.Context) {
 	var (
 		svc    group.Svc
@@ -64,7 +65,7 @@ func (m *groupController) GetList(c *gin.Context) {
 	m.ResponseWithTotalCount(c, data.Data, data.Counts, common.NewErrorCode(common.ErrGetList, err))
 }
 
-// GetDetail godoc
+// Detail godoc
 // @Summary     获取分组详情
 // @Description 获取分组详情
 // @Tags        分组管理
@@ -75,7 +76,7 @@ func (m *groupController) GetList(c *gin.Context) {
 // @Success     200     {object}        common.Response{Data=models.Groups} "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Router      /api/group/{id} [get]
-func (m *groupController) GetDetail(c *gin.Context) {
+func (m *groupController) Detail(c *gin.Context) {
 	var (
 		svc group.Svc
 		err error
@@ -104,7 +105,7 @@ func (m *groupController) GetDetail(c *gin.Context) {
 // @Param   	params     	body    	group.DeleteParams     	false    "删除请求参数"
 // @Success     200     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
-// @Router      /api/group/delete [delete]
+// @Router      /api/group [delete]
 func (m *groupController) Delete(c *gin.Context) {
 	var (
 		svc    group.Svc

@@ -1,0 +1,43 @@
+mixed-port: 7890
+allow-lan: true
+bind-address: '*'
+mode: rule
+log-level: info
+
+external-controller: 0.0.0.0:9090
+unified-delay: true
+geodata-mode: true
+
+profile:
+  store-selected: false
+  store-fake-ip: false
+  persist: true
+
+proxies:
+  - name: "basic"
+    type: trojan
+    server: ip0axvlbbsu02k7-hk.1ytnode.com
+    port: 56301
+    password: 4ea97c07-da7d-4a23-ad59-3858068450ab
+    skip-cert-verify: true
+
+  - name: "residential"
+    type: {{ .ISPProtocol }}
+    server: {{ .ISPServer }}
+    port: {{ .ISPPort }}
+    username: {{ .ISPUsername }}
+    password: {{ .ISPPassword }}
+    udp: true
+    interface-name: "tun0"
+
+proxy-groups:
+  - name: "CHAINED"
+    type: relay
+    proxies:
+      - basic
+      - residential
+
+rules:
+  - IP-CIDR,119.45.168.93/32,DIRECT,no-resolve
+  - GEOIP,CN,DIRECT
+  - MATCH,CHAINED

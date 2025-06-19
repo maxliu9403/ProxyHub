@@ -1,0 +1,157 @@
+run:
+  version: "2"
+  timeout: 30m
+  issues-exit-code: 1
+  tests: false
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters-settings:
+  errcheck:
+    check-type-assertions: false
+    check-blank: false
+
+  gosec:
+    exclude:
+      - "G104"
+      - "G204"
+
+  funlen:
+    lines: 80
+    statements: 50
+
+  govet:
+    check-shadowing: true
+    settings:
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+
+  golint:
+    min-confidence: 0.8
+
+  gofmt:
+    simplify: true
+
+  gocyclo:
+    min-complexity: 30
+
+  gocognit:
+    min-complexity: 30
+
+  maligned:
+    suggest-new: true
+
+  dupl:
+    threshold: 100
+
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+
+  misspell:
+    locale: US
+    ignore-words:
+      - GitLab
+
+  lll:
+    line-length: 120
+    tab-width: 1
+
+  unused:
+    check-exported: false
+
+  unparam:
+    check-exported: false
+
+  nakedret:
+    max-func-lines: 30
+
+  prealloc:
+    simple: true
+    range-loops: true
+    for-loops: false
+
+  gocritic:
+    settings:
+      captLocal:
+        paramsOnly: true
+
+  godox:
+    keywords:
+      - BUG
+      - FIXME
+      - OPTIMIZE
+      - HACK
+
+  dogsled:
+    max-blank-identifiers: 2
+
+  whitespace:
+    multi-if: false
+    multi-func: false
+
+  wsl:
+    strict-append: true
+    allow-assign-and-call: true
+    allow-multiline-assign: true
+    allow-cuddle-declarations: false
+    allow-trailing-comment: false
+    force-case-trailing-whitespace: 0
+
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - depguard
+    - dogsled
+    - errcheck
+    - funlen
+    - gocognit
+    - goconst
+    - gocritic
+    - godox
+    - gofmt
+    - goimports
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - scopelint
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+
+issues:
+  exclude-dirs:
+    - vendor
+  exclude-dirs-use-default: true
+  exclude-files:
+    - internal/handler/init_test_router.go
+
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - funlen
+    - linters:
+        - lll
+      source: "^//go:generate "
+
+  exclude-use-default: true
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
