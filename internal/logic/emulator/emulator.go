@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/maxliu9403/ProxyHub/internal/logic"
 	"github.com/maxliu9403/ProxyHub/internal/logic/group"
 	"github.com/maxliu9403/ProxyHub/internal/types"
 
@@ -204,29 +203,37 @@ type UpdateParams struct {
 }
 
 func (s *Svc) Update(params UpdateParams) error {
-	updateFields := map[string]interface{}{}
-	if params.IP != nil {
-		// 校验IP
-		if !logic.CheckIP(*params.IP) {
-			return errors.New("IP 不合法")
+	var emulator models.Emulator
+	err := s.getRepo().GetByUuid(&emulator, params.UUID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.NewErrorCode(common.ErrUpdateEmulator, errors.New("模拟器不存在"))
 		}
+		logger.ErrorfWithTrace(s.Ctx, "query emulator failed: %s", err.Error())
+		return common.NewErrorCode(common.ErrUpdateEmulator, err)
+	}
+
+	updateFields := map[string]interface{}{}
+
+	if params.IP != nil {
 		updateFields["ip"] = *params.IP
 	}
+
 	if params.GroupID != nil {
-		// 校验GroupID是否合法
 		groupAPI := group.NewGroupAPI(s.Ctx)
 		hasActiveGroup, err := groupAPI.CheckGroupID(*params.GroupID)
 		if err != nil {
 			return err
 		}
 		if !hasActiveGroup {
-			return errors.New("当前分组ID不是激活状态")
+			return errors.New("当前分组ID不是激活状态或者不存在")
 		}
 		updateFields["group_id"] = *params.GroupID
 	}
-	err := s.getRepo().Update(params.UUID, updateFields)
+
+	err = s.getRepo().Update(params.UUID, updateFields)
 	if err != nil {
-		logger.ErrorfWithTrace(s.Ctx, "update group failed: %s", err.Error())
+		logger.ErrorfWithTrace(s.Ctx, "update emulator failed: %s", err.Error())
 		return common.NewErrorCode(common.ErrUpdateGroup, err)
 	}
 

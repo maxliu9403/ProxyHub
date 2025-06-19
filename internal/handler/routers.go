@@ -31,9 +31,11 @@ func RegisterRouter(tra opentracing.Tracer, r *gin.RouterGroup) {
 	proxyCtl := newProxyController(common.BaseController{})
 	tokenCtl := newTokenController(common.BaseController{})
 	emulatorCtl := newEmulatorController(common.BaseController{})
+	subscribeCtl := newSubscribeController(common.BaseController{})
 
 	// 管理员接口路由（带中间件）
 	adminGroup := r.Group("/api")
+	registerSubscribeRouter(subscribeCtl, adminGroup)
 	adminGroup.Use(adminMW)
 	registerProxyRouter(proxyCtl, adminGroup)
 	registerTokenRouter(tokenCtl, adminGroup)
@@ -69,4 +71,9 @@ func registerEmulatorRouter(emulator *emulatorController, group *gin.RouterGroup
 	group.DELETE("/emulator", emulator.Delete)
 	group.POST("/emulator", emulator.Create)
 	group.GET("/emulator:uuid", emulator.Detail)
+	group.PUT("/emulator", emulator.Update)
+}
+
+func registerSubscribeRouter(subscribe *subscribeController, group *gin.RouterGroup) {
+	group.GET("/subscribe/:token/:uuid", subscribe.Get)
 }

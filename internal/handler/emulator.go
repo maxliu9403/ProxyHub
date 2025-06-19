@@ -128,3 +128,30 @@ func (e *emulatorController) Delete(c *gin.Context) {
 	err := svc.Delete(params)
 	e.Response(c, nil, err)
 }
+
+// Update godoc
+// @Summary     更新模拟器分组
+// @Description 更新模拟器分组信息
+// @Tags        模拟器管理
+// @Security    AdminTokenAuth
+// @Accept      json
+// @Produce     json
+// @Param       params body emulator.UpdateParams true "更新参数"
+// @Success     200 {object} common.Response
+// @Failure     400 {object} common.Response "参数错误"
+// @Failure     500 {object} common.Response "服务器内部错误"
+// @Router      /api/emulator [put]
+func (e *emulatorController) Update(c *gin.Context) {
+	var (
+		svc    emulator.Svc
+		params emulator.UpdateParams
+	)
+
+	if !e.CheckParams(c, &params) {
+		return
+	}
+
+	svc.Ctx = c
+	err := svc.Update(params)
+	e.Response(c, nil, err)
+}

@@ -87,7 +87,6 @@ func (r *proxyCrudImpl) GetList(q models.GetListParams, model, list interface{})
 	// 排序
 	if q.Order != "" {
 		orderList := strings.Split(q.Order, ",")
-
 		for _, o := range orderList {
 			orderKey := strings.Split(o, " ")
 			switch len(orderKey) {
@@ -100,7 +99,6 @@ func (r *proxyCrudImpl) GetList(q models.GetListParams, model, list interface{})
 				if order != "DESC" && order != "ASC" {
 					order = "ASC"
 				}
-
 				db.Order(fmt.Sprintf("%s %s", columnName, order))
 			}
 		}
@@ -134,8 +132,8 @@ func (r *proxyCrudImpl) Create(proxy *models.Proxy) error {
 	return r.Conn.Create(proxy).Error
 }
 
-func (r *proxyCrudImpl) Update(id int64, fields map[string]interface{}) error {
-	return r.Conn.Model(&models.Proxy{}).Where("id = ?", id).Updates(fields).Error
+func (r *proxyCrudImpl) Update(ip string, fields map[string]interface{}) error {
+	return r.Conn.Model(&models.Proxy{}).Where("ip = ?", ip).Updates(fields).Error
 }
 
 func (r *proxyCrudImpl) CreateBatch(proxies []*models.Proxy) error {
@@ -152,4 +150,39 @@ func (r *proxyCrudImpl) GetByIP(ip string) (*models.Proxy, error) {
 	proxy := &models.Proxy{}
 	err := r.Conn.Where("ip = ?", ip).First(proxy).Error
 	return proxy, err
+}
+
+func (r *proxyCrudImpl) IncrementInUse(ip string) error {
+	return r.Conn.Model(&models.Proxy{}).
+		Where("ip = ?", ip).
+		UpdateColumn("inuse_count", gorm.Expr("inuse_count + 1")).Error
+}
+
+func (r *proxyCrudImpl) DecrementInUse(ip string) error {
+	return r.Conn.Model(&models.Proxy{}).
+		Where("ip = ?", ip).
+		UpdateColumn("inuse_count", gorm.Expr("inuse_count - 1")).Error
+}
+
+// GetOneForUpdate 优先取 inuse_count 最小的集合；然后从这个集合中 随机选一个 代理。
+func (r *proxyCrudImpl) GetOneForUpdate(groupID int64, maxOnline int) (*models.Proxy, error) {
+	var proxy models.Proxy
+
+	err := r.Conn.Raw(`
+		SELECT * FROM tbl_proxy
+		WHERE group_id = ? AND inuse_count = (
+			SELECT MIN(inuse_count) FROM tbl_proxy WHERE group_id = ? AND inuse_count < ?
+		)
+		ORDER BY RAND()
+		LIMIT 1
+		FOR UPDATE
+	`, groupID, groupID, maxOnline).Scan(&proxy).Error
+
+	if err != nil {
+		return nil, err
+	}
+	if proxy.ID == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+	return &proxy, nil
 }

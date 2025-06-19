@@ -10,5 +10,5 @@ type Proxy struct {
 	GroupID    int64  `json:"GroupID" gorm:"column:group_id;not null;index;comment:'所属代理池组'"`
 	Enabled    bool   `json:"Enabled" gorm:"column:enabled;not null;default:true;index;comment:'是否启用'"`
 	Source     string `json:"Source" gorm:"column:source;type:varchar(64);not null;index;comment:'来源类型，例：pias5/711/ipfoxy'"` //  新增字段
-	InUseCount int64  `json:"InUseCount" gorm:"column:in_use_count;not null;index;comment:'当前使用数'"`
+	InUseCount int64  `json:"InUseCount" gorm:"column:inuse_count;not null;index;comment:'当前使用数'"`
 }

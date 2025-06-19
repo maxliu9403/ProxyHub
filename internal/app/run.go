@@ -55,7 +55,6 @@ func run() (err error) {
 
 	// 数据表迁移，新增表时修改 AllTables
 	m := apiserver.Migration(models.AllTables)
-	// 初始化项目所需的 API，定时从配置中心获取最新 API 地址
 	server := apiserver.CreateNewServer(ctx, config.G.APIConfig, m)
 	defer server.Stop()
 
@@ -64,19 +63,6 @@ func run() (err error) {
 	group := server.AddGinGroup("")
 	tra := server.GetTracer()
 	handler.RegisterRouter(tra, group)
-
-	// 以下是初始化 kafka 生产者和消费者，按需取消注释，或者删除代码
-	// producer.NewProducer(config.G.Kafka)
-	//
-	// c, err := kafka.Default().NewConsumer()
-	// if err != nil {
-	// 	logger.Fatal(err.Error())
-	// 	return
-	// }
-	// if err = consumer.RunConsume(c); err != nil {
-	// 	logger.Fatal(err.Error())
-	// 	return
-	// }
 
 	// 初始化 validator 翻译器
 	if err = common.InitTrans("zh"); err != nil {

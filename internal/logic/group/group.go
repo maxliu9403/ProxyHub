@@ -158,6 +158,18 @@ type UpdateParams struct {
 }
 
 func (s *Svc) Update(params UpdateParams) error {
+	// 先校验分组是否存在且激活
+	if params.ID != 0 {
+		isActive, err := s.getRepo().IsGroupActive(params.ID)
+		if err != nil {
+			logger.ErrorfWithTrace(s.Ctx, "check group existence failed: %s", err.Error())
+			return common.NewErrorCode(common.ErrUpdateGroup, err)
+		}
+		if !isActive {
+			return common.NewErrorCode(common.ErrUpdateGroup, errors.New("分组不存在或者未激活"))
+		}
+	}
+
 	updateFields := map[string]interface{}{}
 	if params.Name != nil {
 		updateFields["name"] = *params.Name

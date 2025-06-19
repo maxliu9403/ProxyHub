@@ -12,9 +12,8 @@ type BasicQuery struct {
 	FuzzyField map[string]string `json:"FuzzyField"` // 模糊查询字段
 	Fields     []string          `json:"Fields"`     // 指定返回字段
 	Keyword    string            `json:"Keyword"`    // 关键词(全局模糊搜索)
-	Order      string            `json:"Order"`      // 排序，支持desc和asc
-	OrderBy    string            `json:"OrderBy"`    // 排序字段，默认按照创建时间降序
+	Order      string            `json:"Order"`      // 排序，支持desc和asc exp:inuse_count desc,created_at asc
 	Limit      int               `json:"Limit"`      // 分页条数
 	Offset     int               `json:"Offset"`     // 分页偏移量
-	Query      string            `json:"Query"`      // 自定义查询语句；使用RSQL语法，具体见：https://cmdb-web.ucloudadmin.com/docs/#api-appendix-query-syntax
+	Query      string            `json:"Query"`      // 自定义查询语句；使用RSQL语法
 }

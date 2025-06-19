@@ -3,11 +3,9 @@ package proxy
 import (
 	"context"
 	"errors"
-
 	"fmt"
 
 	"github.com/maxliu9403/ProxyHub/internal/common"
-	"github.com/maxliu9403/ProxyHub/internal/logic"
 	"github.com/maxliu9403/ProxyHub/internal/logic/group"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/factory"
@@ -18,10 +16,9 @@ import (
 )
 
 type Svc struct {
-	ID          int64
-	Ctx         context.Context
-	RunningTest bool
-	DB          *gorm.DB
+	ID  int64
+	Ctx context.Context
+	DB  *gorm.DB
 }
 
 func (s *Svc) getRepo() repo.ProxyRepo {
@@ -111,9 +108,7 @@ func (s *Svc) CreateBatch(params CreateBatchParams) (resp *CreateBatchResult, er
 }
 
 type UpdateParams struct {
-	common.Test
-	ID        int64   `json:"ID" binding:"required"`
-	IP        *string `json:"IP,omitempty" binding:"omitempty,ip"`
+	IP        string  `json:"IP" binding:"omitempty,ip"`
 	Port      *int    `json:"Port,omitempty" binding:"omitempty,gt=0,lte=65535"`
 	Username  *string `json:"Username,omitempty"`
 	Password  *string `json:"Password,omitempty"`
@@ -124,14 +119,15 @@ type UpdateParams struct {
 }
 
 func (s *Svc) Update(params UpdateParams) error {
-	updateFields := map[string]interface{}{}
-	if params.IP != nil {
-		// 校验IP
-		if !logic.CheckIP(*params.IP) {
-			return errors.New("IP 不合法")
+	// 先校验代理是否存在
+	_, err := s.getRepo().GetByIP(params.IP)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.NewErrorCode(common.ErrUpdateProxy, errors.New("代理不存在"))
 		}
-		updateFields["ip"] = *params.IP
 	}
+
+	updateFields := map[string]interface{}{}
 	if params.Port != nil {
 		updateFields["port"] = *params.Port
 	}
@@ -142,7 +138,6 @@ func (s *Svc) Update(params UpdateParams) error {
 		updateFields["password"] = *params.Password
 	}
 	if params.GroupID != nil {
-		// 校验GroupID是否合法
 		groupAPI := group.NewGroupAPI(s.Ctx)
 		hasActiveGroup, err := groupAPI.CheckGroupID(*params.GroupID)
 		if err != nil {
@@ -163,10 +158,10 @@ func (s *Svc) Update(params UpdateParams) error {
 		updateFields["proxy_type"] = *params.ProxyType
 	}
 
-	err := s.getRepo().Update(params.ID, updateFields)
+	err = s.getRepo().Update(params.IP, updateFields)
 	if err != nil {
 		logger.ErrorfWithTrace(s.Ctx, "update proxy failed: %s", err.Error())
-		return common.NewErrorCode(common.ErrCreateProxy, err)
+		return common.NewErrorCode(common.ErrUpdateProxy, err)
 	}
 	return nil
 }

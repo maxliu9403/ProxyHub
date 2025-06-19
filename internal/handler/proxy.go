@@ -9,6 +9,8 @@ package handler
 import (
 	"fmt"
 
+	"github.com/maxliu9403/ProxyHub/internal/logic"
+
 	"github.com/gin-gonic/gin"
 	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/ProxyHub/internal/logic/proxy"
@@ -71,8 +73,12 @@ func (m *proxyController) GetList(c *gin.Context) {
 func (m *proxyController) Detail(c *gin.Context) {
 	ip := c.Param("ip")
 	if ip == "" {
-		m.Response(c, nil, common.NewErrorCode(common.ErrInvalidParams, fmt.Errorf("无效的ID参数")))
+		m.Response(c, nil, common.NewErrorCode(common.ErrInvalidParams, fmt.Errorf("无效的IP参数")))
 		return
+	}
+
+	if !logic.CheckIP(ip) {
+		m.Response(c, nil, common.NewErrorCode(common.ErrInvalidParams, fmt.Errorf("非法的IP")))
 	}
 
 	svc := proxy.Svc{Ctx: c}
@@ -131,7 +137,6 @@ func (m *proxyController) Update(c *gin.Context) {
 	}
 
 	svc.Ctx = c
-	svc.RunningTest = params.Test.Enable
 
 	err = svc.Update(params)
 	m.Response(c, nil, common.NewErrorCode(common.ErrUpdateProxy, err))
@@ -160,7 +165,6 @@ func (m *proxyController) Delete(c *gin.Context) {
 	}
 
 	svc.Ctx = c
-	svc.RunningTest = params.Test.Enable
 	err = svc.Delete(params)
 	m.Response(c, nil, common.NewErrorCode(common.ErrDeleteProxy, err))
 }
