@@ -41,7 +41,7 @@ ENV TZ=Asia/Shanghai
 EXPOSE 9901
 
 # 启动命令（绝对路径）
-CMD ["/app/proxyhub", "--config", "/configs/dev.yaml"]
+CMD ["/app/proxyhub", "--config", "/app/configs/dev.yaml"]
 
 #docker buildx build \
 #  --platform linux/arm64 \
