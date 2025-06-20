@@ -38,6 +38,5 @@ proxy-groups:
       - residential
 
 rules:
-  - IP-CIDR,119.45.168.93/32,DIRECT,no-resolve
   - GEOIP,CN,DIRECT
   - MATCH,CHAINED

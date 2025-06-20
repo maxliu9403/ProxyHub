@@ -6,29 +6,30 @@ services:
     container_name: mysql
     restart: always
     ports:
-      - "3307:3306"
+      - "${MYSQL_PORT}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: 1qaz!QAZ2wsx@WSX
-      MYSQL_DATABASE: proxy_hub
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
     volumes:
       - ./mysql/data:/var/lib/mysql
+      - ./mysql/conf/my.cnf:/etc/mysql/my.cnf
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p1qaz!QAZ2wsx@WSX || exit 1"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p${MYSQL_ROOT_PASSWORD} || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 30s
 
   proxyhub:
-    image: proxyhub:v1.0.0
+    image: ${PROXYHUB_IMAGE}
     container_name: proxyhub
     depends_on:
       mysql:
         condition: service_healthy
     ports:
-      - "9901:9901"
-      - "8001:8001"
+      - "${PROXYHUB_PORT}:9901"
+      - "${PROXYHUB_ADMIN_PORT}:8001"
     volumes:
       - ./configs:/configs
       - ./logs:/app/logs
@@ -36,6 +37,6 @@ services:
       MySQLWriteHost: mysql
       MySQLWritePort: 3306
       MySQLWriteUser: root
-      MySQLWritePassword: 1qaz!QAZ2wsx@WSX
-      MySQLWriteDB: proxy_hub
+      MySQLWritePassword: ${MYSQL_ROOT_PASSWORD}
+      MySQLWriteDB: ${MYSQL_DATABASE}
     command: ["/app/proxyhub", "--config", "/configs/dev.yaml"]

@@ -28,7 +28,7 @@ func (s *Svc) renderClashConfig(proxy *models.Proxy) (string, error) {
 	}
 
 	// 读取模板
-	tmplContent, err := os.ReadFile("/Users/liuxiang/go/src/github.com/ProxyHub/configs/base_proxy.yaml")
+	tmplContent, err := os.ReadFile("/configs/base_proxy.yaml")
 	if err != nil {
 		return "", fmt.Errorf("读取模板失败: %w", err)
 	}

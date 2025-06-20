@@ -1,11 +1,10 @@
 base:
   app:
-    service_name: ProxyHub
+    service_name: proxyhub
     local_ip: 0.0.0.0
     api_port: 9901
     admin_port: 8001
     run_mode: debug
-    refresh_minutes: 10
 
   log:
     level: debug

@@ -33,7 +33,6 @@ WORKDIR /app
 # 复制编译后的二进制和配置文件
 COPY --from=builder /app/proxyhub /app/proxyhub
 COPY --from=builder /app/docs /app/docs
-COPY --from=builder /app/configs/dev.yaml /configs/dev.yaml
 
 # 设置默认时区
 ENV TZ=Asia/Shanghai
@@ -43,3 +42,9 @@ EXPOSE 9901
 
 # 启动命令（绝对路径）
 CMD ["/app/proxyhub", "--config", "/configs/dev.yaml"]
+
+#docker buildx build \
+#  --platform linux/arm64 \
+#  -t proxyhub:v1.0.0 \
+#  -f ./build/Dockerfile \
+#  --output type=docker .
