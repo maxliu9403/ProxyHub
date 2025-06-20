@@ -1,34 +1,45 @@
-FROM golang:1.18.7 as builder
+# -------- 构建阶段 --------
+FROM golang:1.23.5 AS builder
 
-LABEL maintainer="max.liu9403@gmail.com"
-
+# 版本信息
 ARG COMMITID
 ENV COMMITID=${COMMITID:-v1.0}
-ENV GO111MODULE=on
-ENV MIRROR_URL=https://mirrors.aliyun.com/alpine/
 
-RUN echo '' > /etc/apk/repositories \
-    && echo "${MIRROR_URL}v3.14/main" >> /etc/apk/repositories \
-    && echo "${MIRROR_URL}v3.14/community" >> /etc/apk/repositories
+# 多平台编译目标（由 buildx 传入）
+ARG TARGETOS
+ARG TARGETARCH
 
-WORKDIR /go/src/github.com/maxliu9403/ProxyHub
+# 编译环境变量
+ENV GOOS=$TARGETOS
+ENV GOARCH=$TARGETARCH
+ENV CGO_ENABLED=0
 
+WORKDIR /app
+
+# 复制代码并编译
 COPY . .
+RUN go mod vendor
+RUN go build -mod=vendor -ldflags="-s -w -X main.Build=${COMMITID}" -o proxyhub ./cmd/app
 
-RUN go install -mod vendor -ldflags="-s -w -X 'main.Build=$COMMITID'" -v ./...
+# -------- 运行阶段 --------
+FROM alpine:3.18
 
-FROM golang:1.18.7
+# 安装证书和时区数据
+RUN apk add --no-cache ca-certificates tzdata
 
-ENV MIRROR_URL=https://mirrors.aliyun.com/alpine/
+# 创建工作目录
+WORKDIR /app
 
-RUN echo '' > /etc/apk/repositories \
-    && echo "${MIRROR_URL}v3.14/main" >> /etc/apk/repositories \
-    && echo "${MIRROR_URL}v3.14/community" >> /etc/apk/repositories
+# 复制编译后的二进制和配置文件
+COPY --from=builder /app/proxyhub /app/proxyhub
+COPY --from=builder /app/docs /app/docs
+COPY --from=builder /app/configs/dev.yaml /configs/dev.yaml
 
-COPY --from=builder /go/bin/app /
-COPY --from=builder /go/src/github.com/maxliu9403/ProxyHub/docs/ /docs
-COPY --from=builder /go/src/github.com/maxliu9403/ProxyHub/configs/dev.yaml /
+# 设置默认时区
+ENV TZ=Asia/Shanghai
 
+# 暴露服务端口
 EXPOSE 9901
 
-CMD ["/app", "--config", "dev.yaml"]
+# 启动命令（绝对路径）
+CMD ["/app/proxyhub", "--config", "/configs/dev.yaml"]

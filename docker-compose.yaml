@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 1qaz!QAZ2wsx@WSX
+      MYSQL_DATABASE: proxy_hub
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p1qaz!QAZ2wsx@WSX || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  proxyhub:
+    image: proxyhub:v1.0.0
+    container_name: proxyhub
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "9901:9901"
+      - "8001:8001"
+    volumes:
+      - ./configs:/configs
+      - ./logs:/app/logs
+    environment:
+      MySQLWriteHost: mysql
+      MySQLWritePort: 3306
+      MySQLWriteUser: root
+      MySQLWritePassword: 1qaz!QAZ2wsx@WSX
+      MySQLWriteDB: proxy_hub
+    command: ["/app/proxyhub", "--config", "/configs/dev.yaml"]

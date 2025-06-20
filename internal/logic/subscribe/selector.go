@@ -1,9 +1,10 @@
 package subscribe
 
 import (
-	"github.com/maxliu9403/ProxyHub/models"
 	"math/rand"
 	"time"
+
+	"github.com/maxliu9403/ProxyHub/models"
 )
 
 // 选负载最低

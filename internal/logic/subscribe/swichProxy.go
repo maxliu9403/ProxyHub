@@ -2,6 +2,7 @@ package subscribe
 
 import (
 	"fmt"
+
 	"github.com/maxliu9403/ProxyHub/internal/logic"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/factory"
