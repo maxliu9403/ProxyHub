@@ -31,7 +31,7 @@ services:
       - "${PROXYHUB_PORT}:9901"
       - "${PROXYHUB_ADMIN_PORT}:8001"
     volumes:
-      - ./configs:/configs
+      - ./configs:/app/configs
       - ./logs:/app/logs
     environment:
       MySQLWriteHost: mysql
@@ -39,4 +39,4 @@ services:
       MySQLWriteUser: root
       MySQLWritePassword: ${MYSQL_ROOT_PASSWORD}
       MySQLWriteDB: ${MYSQL_DATABASE}
-    command: ["/app/proxyhub", "--config", "/configs/dev.yaml"]
+    command: ["/app/proxyhub", "--config", "/app/configs/dev.yaml"]

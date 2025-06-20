@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"text/template"
 
 	"github.com/maxliu9403/ProxyHub/models"
@@ -17,6 +18,16 @@ type ClashTemplateData struct {
 	ISPPassword string
 }
 
+func loadTemplate() ([]byte, error) {
+	execPath, err := os.Executable()
+	if err != nil {
+		return nil, err
+	}
+	execDir := filepath.Dir(execPath)
+	templatePath := filepath.Join(execDir, "configs", "base_proxy.yaml")
+	return os.ReadFile(templatePath)
+}
+
 func (s *Svc) renderClashConfig(proxy *models.Proxy) (string, error) {
 	// 准备数据
 	data := ClashTemplateData{
@@ -28,7 +39,7 @@ func (s *Svc) renderClashConfig(proxy *models.Proxy) (string, error) {
 	}
 
 	// 读取模板
-	tmplContent, err := os.ReadFile("/configs/base_proxy.yaml")
+	tmplContent, err := loadTemplate()
 	if err != nil {
 		return "", fmt.Errorf("读取模板失败: %w", err)
 	}
