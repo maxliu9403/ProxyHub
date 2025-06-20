@@ -164,25 +164,12 @@ func (r *proxyCrudImpl) DecrementInUse(ip string) error {
 		UpdateColumn("inuse_count", gorm.Expr("inuse_count - 1")).Error
 }
 
-// GetOneForUpdate 优先取 inuse_count 最小的集合；然后从这个集合中 随机选一个 代理。
-func (r *proxyCrudImpl) GetOneForUpdate(groupID int64, maxOnline int) (*models.Proxy, error) {
+// GetByIPForUpdate 查询指定 IP 并加锁，事务中使用
+func (r *proxyCrudImpl) GetByIPForUpdate(ip string) (*models.Proxy, error) {
 	var proxy models.Proxy
-
-	err := r.Conn.Raw(`
-		SELECT * FROM tbl_proxy
-		WHERE group_id = ? AND inuse_count = (
-			SELECT MIN(inuse_count) FROM tbl_proxy WHERE group_id = ? AND inuse_count < ?
-		)
-		ORDER BY RAND()
-		LIMIT 1
-		FOR UPDATE
-	`, groupID, groupID, maxOnline).Scan(&proxy).Error
-
+	err := r.Conn.Raw(`SELECT * FROM tbl_proxy WHERE ip = ? FOR UPDATE`, ip).Scan(&proxy).Error
 	if err != nil {
 		return nil, err
-	}
-	if proxy.ID == 0 {
-		return nil, gorm.ErrRecordNotFound
 	}
 	return &proxy, nil
 }

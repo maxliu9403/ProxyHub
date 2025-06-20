@@ -23,5 +23,5 @@ type ProxyRepo interface {
 	GetByIP(ip string) (*models.Proxy, error)
 	DecrementInUse(ip string) error
 	IncrementInUse(ip string) error
-	GetOneForUpdate(groupID int64, maxOnline int) (*models.Proxy, error)
+	GetByIPForUpdate(ip string) (*models.Proxy, error)
 }

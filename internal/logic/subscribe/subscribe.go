@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/maxliu9403/ProxyHub/internal/types"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/factory"
@@ -15,10 +14,9 @@ import (
 )
 
 type Svc struct {
-	ID          int64
-	Ctx         context.Context
-	RunningTest bool
-	DB          *gorm.DB
+	ID  int64
+	Ctx context.Context
+	DB  *gorm.DB
 }
 
 func (s *Svc) getGroupRepo() repo.GroupsRepo {
@@ -103,7 +101,7 @@ func (s *Svc) getGroup(groupId int64) (err error, group *models.Groups) {
 	return
 }
 
-func (s *Svc) prepareAndSelectProxy(token, uuid string) (*models.Emulator, *models.Proxy, error) {
+func (s *Svc) prepareAndSelectProxy(token, uuid string) (*models.Emulator, *models.Groups, error) {
 	// 校验 token
 	if isValid, err := s.getTokenRepo().IsValid(token); err != nil || !isValid {
 		return nil, nil, fmt.Errorf("token 无效或检查失败: %w", err)
@@ -121,28 +119,21 @@ func (s *Svc) prepareAndSelectProxy(token, uuid string) (*models.Emulator, *mode
 		return nil, nil, fmt.Errorf("分组获取失败: %w", err)
 	}
 
-	// 查找 Proxy，找到负载最小的那个IP，但是可能就是当前模拟器正在使用的IP
-	// 如果是这种逻辑，那么在后面switchProxy时会实现强行切换（如有有得选的前提下）
-	selectedProxy, err := s.getProxyRepo().GetOneForUpdate(emulator.GroupID, group.MaxOnline)
-	if err != nil {
-		return nil, nil, fmt.Errorf("查找代理失败: %w", err)
-	}
-
-	return emulator, selectedProxy, nil
+	return emulator, group, nil
 }
 
 func (s *Svc) Subscribe(token string, uuid string) (clashCfg string, err error) {
 	// Step 1: 校验并准备数据
-	emulator, selectedProxy, err := s.prepareAndSelectProxy(token, uuid)
+	emulator, group, err := s.prepareAndSelectProxy(token, uuid)
 	if err != nil {
 		return
 	}
 
 	// Step 2: 代理切换（幂等 + 原子 + 事务 + 锁）
-	if err = s.switchProxy(emulator, selectedProxy); err != nil {
+	selectedProxy, err := s.switchProxy(emulator, group)
+	if err != nil {
 		return
 	}
-
 	// Step 3: 渲染 Clash 配置
 	clashCfg, err = s.renderClashConfig(selectedProxy)
 	if err != nil {
