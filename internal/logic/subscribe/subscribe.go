@@ -2,8 +2,9 @@ package subscribe
 
 import (
 	"context"
-	"errors"
 	"fmt"
+
+	"github.com/maxliu9403/ProxyHub/internal/logic/token"
 
 	"github.com/maxliu9403/ProxyHub/internal/types"
 	"github.com/maxliu9403/ProxyHub/models"
@@ -15,9 +16,10 @@ import (
 )
 
 type Svc struct {
-	ID  int64
-	Ctx context.Context
-	DB  *gorm.DB
+	ID             int64
+	Ctx            context.Context
+	DB             *gorm.DB
+	TokenValidator token.Validator // 依赖注入
 }
 
 func (s *Svc) getGroupRepo() repo.GroupsRepo {
@@ -30,42 +32,9 @@ func (s *Svc) getProxyRepo() repo.ProxyRepo {
 	return factory.ProxyRepo(s.DB)
 }
 
-func (s *Svc) getTokenRepo() repo.TokenRepo {
-	s.DB = gormdb.Cli(s.Ctx)
-	return factory.TokenRepo(s.DB)
-}
 func (s *Svc) getEmulatorRepo() repo.EmulatorRepo {
 	s.DB = gormdb.Cli(s.Ctx)
 	return factory.EmulatorRepo(s.DB)
-}
-
-func (s *Svc) check(token string, groupId int64) error {
-	// 校验Token是否有效
-	tokenRepo := s.getTokenRepo()
-	isValid, err := tokenRepo.IsValid(token)
-	if err != nil {
-		logger.ErrorfWithTrace(s.Ctx, "校验Token失败: %s", err.Error())
-		return err
-	}
-	if !isValid {
-		err = errors.New("token已经过期")
-		logger.ErrorfWithTrace(s.Ctx, err.Error())
-		return err
-	}
-
-	// 校验group是否有效
-	groupRepo := s.getGroupRepo()
-	active, err := groupRepo.IsGroupActive(groupId)
-	if err != nil {
-		logger.ErrorfWithTrace(s.Ctx, "校验GroupId失败: %s", err.Error())
-		return err
-	}
-	if !active {
-		err = errors.New("GroupId 不是激活的或者不存在")
-		logger.ErrorfWithTrace(s.Ctx, err.Error())
-		return err
-	}
-	return nil
 }
 
 func (s *Svc) getProxies(groupId int64) (err error, proxies []models.Proxy) {
@@ -84,27 +53,9 @@ func (s *Svc) getProxies(groupId int64) (err error, proxies []models.Proxy) {
 	return
 }
 
-func (s *Svc) getEmulator(uuid string) (err error, emulator *models.Emulator) {
-	err = s.getEmulatorRepo().GetByUuid(emulator, uuid)
-	if err != nil {
-		logger.ErrorfWithTrace(s.Ctx, err.Error())
-		return
-	}
-	return
-}
-
-func (s *Svc) getGroup(groupId int64) (err error, group *models.Groups) {
-	err = s.getGroupRepo().GetByID(group, groupId)
-	if err != nil {
-		logger.ErrorfWithTrace(s.Ctx, err.Error())
-		return
-	}
-	return
-}
-
 func (s *Svc) prepareAndSelectProxy(token, uuid string) (*models.Emulator, *models.Groups, error) {
 	// 校验 token
-	if isValid, err := s.getTokenRepo().IsValid(token); err != nil || !isValid {
+	if isValid, err := s.TokenValidator.ValidateToken(token); err != nil || !isValid {
 		return nil, nil, fmt.Errorf("token 无效或检查失败: %w", err)
 	}
 

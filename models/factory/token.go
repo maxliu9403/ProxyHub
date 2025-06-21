@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maxliu9403/ProxyHub/internal/types"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/repo"
 	"github.com/maxliu9403/common/gadget"
@@ -23,7 +22,7 @@ func TokenRepo(db *gorm.DB) repo.TokenRepo {
 	return &tokenCrudImpl{Conn: db}
 }
 
-func (r *tokenCrudImpl) GetList(q types.BasicQuery, model, list interface{}) (total int64, err error) {
+func (r *tokenCrudImpl) GetList(q models.GetTokenListParams, model, list interface{}) (total int64, err error) {
 	db := r.Conn.Model(model)
 
 	// 指定字段
@@ -45,6 +44,10 @@ func (r *tokenCrudImpl) GetList(q types.BasicQuery, model, list interface{}) (to
 	if q.Keyword != "" {
 		fields := gadget.FieldsFromModel(model, db, true).GetStringField()
 		db.Scopes(gormdb.KeywordGenerator(fields, q.Keyword))
+	}
+
+	if len(q.GroupIDs) > 0 {
+		db.Where("group_id IN ?", q.GroupIDs)
 	}
 
 	// 自定义查询条件
@@ -140,4 +143,25 @@ func (r *tokenCrudImpl) IsValid(token string) (bool, error) {
 
 	// 已过期
 	return false, nil
+}
+
+func (r *tokenCrudImpl) GetValidTokensByGroup(groupID int64, now time.Time) ([]models.Token, error) {
+	var list []models.Token
+	query := r.Conn.Model(&models.Token{}).Where("group_id = ?", groupID)
+	query = query.Where("expire_at IS NULL OR expire_at > ?", now)
+
+	err := query.Find(&list).Error
+	return list, err
+}
+
+// GetByGroupID 查询指定 GroupID 的 Token（主键为 token，非 group_id）
+func (r *tokenCrudImpl) GetByGroupID(groupID int64) (*models.Token, error) {
+	var token models.Token
+	err := r.Conn.Model(&token).
+		Where("group_id = ?", groupID).
+		First(&token).Error
+	if err != nil {
+		return nil, err
+	}
+	return &token, nil
 }

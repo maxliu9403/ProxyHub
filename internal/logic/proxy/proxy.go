@@ -32,13 +32,12 @@ func (s *Svc) getGroupRepo() repo.GroupsRepo {
 }
 
 type CreateParams struct {
-	IP        string `json:"IP" binding:"required,ip"`
+	IP        string `json:"IP" binding:"required"`
 	Port      int64  `json:"Port,omitempty" binding:"omitempty,gt=0,lte=65535"`
 	Username  string `json:"Username" binding:"required"`
 	Password  string `json:"Password" binding:"required"`
 	Source    string `json:"Source" binding:"required"`
-	Enabled   *bool  `json:"Enabled"` // 可选字段，默认 true
-	ProxyType string `json:"ProxyType" binding:"required"`
+	ProxyType string `json:"ProxyType,omitempty" binding:"omitempty,oneof=socks5"`
 }
 
 type CreateBatchParams struct {
@@ -55,7 +54,6 @@ func (p CreateParams) ToModel(groupID int64) *models.Proxy {
 		Password:  p.Password,
 		Source:    p.Source,
 		GroupID:   groupID,
-		Enabled:   p.Enabled != nil && *p.Enabled,
 	}
 }
 
@@ -71,12 +69,12 @@ type CreateBatchResult struct {
 
 func (s *Svc) CreateBatch(params CreateBatchParams) (resp *CreateBatchResult, err error) {
 	groupAPI := group.NewGroupAPI(s.Ctx)
-	hasActiveGroup, err := groupAPI.CheckGroupID(params.GroupID)
+	hasGroup, err := groupAPI.CheckGroupID(params.GroupID)
 	if err != nil {
 		return nil, common.NewErrorCode(common.ErrCreateProxyCheckGroup, err)
 	}
 
-	if !hasActiveGroup {
+	if !hasGroup {
 		return nil, common.NewErrorCode(common.ErrCreateProxyNotGroup, fmt.Errorf("当前分组ID不是激活状态，或者是不存在的激活ID"))
 	}
 
@@ -108,19 +106,18 @@ func (s *Svc) CreateBatch(params CreateBatchParams) (resp *CreateBatchResult, er
 }
 
 type UpdateParams struct {
-	IP        string  `json:"IP" binding:"omitempty,ip"`
-	Port      *int    `json:"Port,omitempty" binding:"omitempty,gt=0,lte=65535"`
-	Username  *string `json:"Username,omitempty"`
-	Password  *string `json:"Password,omitempty"`
-	GroupID   *int64  `json:"GroupID,omitempty"  binding:"omitempty,gt=0"`
-	Source    *string `json:"Source,omitempty"`
-	Enabled   *bool   `json:"Enabled,omitempty"`
-	ProxyType *string `json:"ProxyType,omitempty"`
+	ID        int64   `json:"ID" binding:"required"`                             // ID 必填
+	IP        *string `json:"IP" binding:"omitempty"`                            // IP
+	Port      *int    `json:"Port,omitempty" binding:"omitempty,gt=0,lte=65535"` // 端口
+	Username  *string `json:"Username,omitempty"`                                // 用户名
+	Password  *string `json:"Password,omitempty"`                                // 密码
+	GroupID   *int64  `json:"GroupID,omitempty"  binding:"omitempty,gt=0"`       // 组ID
+	ProxyType *string `json:"ProxyType,omitempty"`                               // 代理类型，socks5
 }
 
 func (s *Svc) Update(params UpdateParams) error {
 	// 先校验代理是否存在
-	_, err := s.getRepo().GetByIP(params.IP)
+	err := s.getRepo().GetByID(&models.Proxy{}, params.ID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.NewErrorCode(common.ErrUpdateProxy, errors.New("代理不存在"))
@@ -131,6 +128,9 @@ func (s *Svc) Update(params UpdateParams) error {
 	if params.Port != nil {
 		updateFields["port"] = *params.Port
 	}
+	if params.IP != nil {
+		updateFields["ip"] = *params.IP
+	}
 	if params.Username != nil {
 		updateFields["username"] = *params.Username
 	}
@@ -139,26 +139,20 @@ func (s *Svc) Update(params UpdateParams) error {
 	}
 	if params.GroupID != nil {
 		groupAPI := group.NewGroupAPI(s.Ctx)
-		hasActiveGroup, err := groupAPI.CheckGroupID(*params.GroupID)
+		hasGroup, err := groupAPI.CheckGroupID(*params.GroupID)
 		if err != nil {
 			return err
 		}
-		if !hasActiveGroup {
+		if !hasGroup {
 			return errors.New("当前分组ID不是激活状态")
 		}
 		updateFields["group_id"] = *params.GroupID
-	}
-	if params.Source != nil {
-		updateFields["source"] = *params.Source
-	}
-	if params.Enabled != nil {
-		updateFields["enabled"] = *params.Enabled
 	}
 	if params.ProxyType != nil {
 		updateFields["proxy_type"] = *params.ProxyType
 	}
 
-	err = s.getRepo().Update(params.IP, updateFields)
+	err = s.getRepo().Update(params.ID, updateFields)
 	if err != nil {
 		logger.ErrorfWithTrace(s.Ctx, "update proxy failed: %s", err.Error())
 		return common.NewErrorCode(common.ErrUpdateProxy, err)

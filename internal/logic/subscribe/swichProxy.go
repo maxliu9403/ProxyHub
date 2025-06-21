@@ -19,7 +19,7 @@ func (s *Svc) bindEmulatorToProxyIP(emulator *models.Emulator, selected *models.
 
 	// 解绑旧 IP
 	if emulator.IP != "" {
-		if err := proxyRepo.DecrementInUse(emulator.IP); err != nil {
+		if err := proxyRepo.DecrementInUse(emulator.IP, 1); err != nil {
 			return fmt.Errorf("旧IP %s 减少使用数失败: %w", emulator.IP, err)
 		}
 	}

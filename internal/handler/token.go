@@ -13,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/ProxyHub/internal/logic/token"
-	"github.com/maxliu9403/ProxyHub/internal/types"
 	"github.com/maxliu9403/ProxyHub/models"
 )
 
@@ -27,7 +26,7 @@ func newTokenController(base common.BaseController) *tokenController {
 
 // Create godoc
 // @Summary     创建 Token
-// @Description 创建一个新的访问 Token（需管理员权限）
+// @Description 创建一个新的访问 Token，如果当前分组内存在未过期的Token则会删除历史Token（需管理员权限）
 // @Tags        Token 管理
 // @Security    AdminTokenAuth
 // @Accept      json
@@ -86,7 +85,7 @@ func (m *tokenController) Delete(c *gin.Context) {
 // @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
-// @Param   	params     	body    	types.BasicQuery     	false    "查询通用请求参数"
+// @Param   	params     	body    	models.GetTokenListParams     	false    "查询通用请求参数"
 // @Success     200 {object}  common.Response{Data=[]models.Token}
 // @Failure     500 {object}  common.Response
 // @Router      /api/token/search [post]
@@ -94,7 +93,7 @@ func (m *tokenController) GetList(c *gin.Context) {
 	var (
 		svc    token.Svc
 		err    error
-		params types.BasicQuery
+		params models.GetTokenListParams
 	)
 
 	if !m.CheckParams(c, &params) {

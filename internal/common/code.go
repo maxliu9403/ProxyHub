@@ -38,6 +38,8 @@ const (
 	ErrQueryExistEmulatorUUID
 	ErrCreateEmulator
 	ErrUpdateEmulator
+	ErrGetSubscribe
+	ErrBuildTokenErrGroup
 )
 
 var codeMsg = map[RetCode]string{
@@ -69,6 +71,8 @@ var codeMsg = map[RetCode]string{
 	ErrQueryExistEmulatorUUID: "查询已存在的UUID失败",
 	ErrCreateEmulator:         "创建模拟器失败",
 	ErrUpdateEmulator:         "更新模拟器失败",
+	ErrGetSubscribe:           "获取订阅链接失败",
+	ErrBuildTokenErrGroup:     "创建Token失败，无效的组ID",
 }
 
 func GetMsg(code RetCode) string {

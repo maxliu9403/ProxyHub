@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/ProxyHub/internal/logic"
+	"github.com/maxliu9403/ProxyHub/internal/logic/group"
+
+	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/ProxyHub/internal/types"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/factory"
@@ -29,7 +31,12 @@ func (s *Svc) getRepo() repo.TokenRepo {
 	return factory.TokenRepo(s.DB)
 }
 
+type Validator interface {
+	ValidateToken(token string) (bool, error)
+}
+
 type CreateParams struct {
+	GroupID     int64  `json:"GroupID" binding:"required,gt=0" comment:"所属分组ID"`
 	Description string `json:"Description" binding:"required"` // 描述
 	Expired     *int64 `json:"Expired,omitempty"`              // 到期时间，不传就是永久不过期
 }
@@ -45,6 +52,7 @@ func (p CreateParams) ToModel(token string) *models.Token {
 		Token:       token,
 		Description: p.Description,
 		ExpireAt:    expireAt,
+		GroupID:     p.GroupID,
 	}
 }
 
@@ -57,18 +65,64 @@ func (s *Svc) Create(params CreateParams) (*models.Token, error) {
 		}
 	}
 
-	// 实现Token的生成
-	token, err := logic.GenerateSecureToken(32)
+	// 校验分组
+	groupAPI := group.NewGroupAPI(s.Ctx)
+	hasGroup, err := groupAPI.CheckGroupID(params.GroupID)
 	if err != nil {
-		logger.ErrorfWithTrace(s.Ctx, "generate token failed: %s", err.Error())
+		logger.ErrorfWithTrace(s.Ctx, "group check failed: %s", err.Error())
+		return nil, common.NewErrorCode(common.ErrBuildTokenErrGroup, err)
+	}
+	if !hasGroup {
+		return nil, errors.New("当前分组ID不是激活状态")
+	}
+
+	// 启动事务
+	tx := gormdb.Cli(s.Ctx).Begin()
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	tokenRepo := factory.TokenRepo(tx)
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
+
+	// 删除旧 Token
+	now := time.Now()
+	oldTokens, err := tokenRepo.GetValidTokensByGroup(params.GroupID, now)
+	if err != nil {
+		tx.Rollback()
+		return nil, common.NewErrorCode(common.ErrGetList, err)
+	}
+	if len(oldTokens) > 0 {
+		tokens := make([]string, 0, len(oldTokens))
+		for _, t := range oldTokens {
+			tokens = append(tokens, t.Token)
+		}
+		if err := tokenRepo.Deletes(tokens); err != nil {
+			tx.Rollback()
+			return nil, common.NewErrorCode(common.ErrDeleteGroup, err)
+		}
+	}
+
+	// 创建新 Token
+	tokenStr, err := logic.GenerateSecureToken(32)
+	if err != nil {
+		tx.Rollback()
 		return nil, common.NewErrorCode(common.ErrBuildToken, err)
 	}
 
-	model := params.ToModel(token)
-	err = s.getRepo().Create(model)
-	if err != nil {
-		logger.ErrorfWithTrace(s.Ctx, "create failed: %s", err.Error())
+	model := params.ToModel(tokenStr)
+	if err := tokenRepo.Create(model); err != nil {
+		tx.Rollback()
 		return nil, common.NewErrorCode(common.ErrCreateGroup, err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
 	}
 
 	return model, nil
@@ -90,7 +144,12 @@ func (s *Svc) Delete(params DeleteToken) (err error) {
 	return err
 }
 
-func (s *Svc) GetList(q types.BasicQuery) (data *common.ListData, err error) {
+type GetListParams struct {
+	types.BasicQuery         // Limit, Offset, Keyword, Order 等
+	GroupIDs         []int64 `json:"GroupIDs,omitempty"` // 多组 ID 过滤
+}
+
+func (s *Svc) GetList(q models.GetTokenListParams) (data *common.ListData, err error) {
 	data = &common.ListData{}
 
 	crud := s.getRepo()

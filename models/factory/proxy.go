@@ -63,10 +63,6 @@ func (r *proxyCrudImpl) GetList(q models.GetListParams, model, list interface{})
 		db.Where("group_id IN ?", q.GroupIDs)
 	}
 
-	if q.Enabled != nil {
-		db.Where("enabled = ?", *q.Enabled)
-	}
-
 	// 自定义查询条件
 	if q.Query != "" {
 		// 把传递过来的Query字段通过gorm的字段命名策略转义成数据库字段
@@ -132,8 +128,8 @@ func (r *proxyCrudImpl) Create(proxy *models.Proxy) error {
 	return r.Conn.Create(proxy).Error
 }
 
-func (r *proxyCrudImpl) Update(ip string, fields map[string]interface{}) error {
-	return r.Conn.Model(&models.Proxy{}).Where("ip = ?", ip).Updates(fields).Error
+func (r *proxyCrudImpl) Update(id int64, fields map[string]interface{}) error {
+	return r.Conn.Model(&models.Proxy{}).Where("id = ?", id).Updates(fields).Error
 }
 
 func (r *proxyCrudImpl) CreateBatch(proxies []*models.Proxy) error {
@@ -158,10 +154,10 @@ func (r *proxyCrudImpl) IncrementInUse(ip string) error {
 		UpdateColumn("inuse_count", gorm.Expr("inuse_count + 1")).Error
 }
 
-func (r *proxyCrudImpl) DecrementInUse(ip string) error {
+func (r *proxyCrudImpl) DecrementInUse(ip string, count int) error {
 	return r.Conn.Model(&models.Proxy{}).
 		Where("ip = ?", ip).
-		UpdateColumn("inuse_count", gorm.Expr("inuse_count - 1")).Error
+		UpdateColumn("inuse_count", gorm.Expr("CASE WHEN inuse_count >= ? THEN inuse_count - ? ELSE 0 END", count, count)).Error
 }
 
 // GetByIPForUpdate 查询指定 IP 并加锁，事务中使用
@@ -172,4 +168,13 @@ func (r *proxyCrudImpl) GetByIPForUpdate(ip string) (*models.Proxy, error) {
 		return nil, err
 	}
 	return &proxy, nil
+}
+
+func (r *proxyCrudImpl) ListByGroupID(groupID int64) ([]*models.ProxyBrief, error) {
+	var proxies []*models.ProxyBrief
+	err := r.Conn.Model(&models.Proxy{}).
+		Select("ip,port,username,password").
+		Where("group_id = ?", groupID).
+		Scan(&proxies).Error
+	return proxies, err
 }

@@ -4,20 +4,11 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"net"
-	"strings"
 	"time"
 
 	"github.com/maxliu9403/common/logger"
 	"gorm.io/gorm"
 )
-
-func CheckIP(ip string) bool {
-	if net.ParseIP(ip) == nil || strings.Contains(ip, ":") {
-		return false
-	}
-	return true
-}
 
 // GenerateSecureToken returns a secure random string of given byte length.
 // 例如传入 32，返回 base64 后长度约为 44 个字符

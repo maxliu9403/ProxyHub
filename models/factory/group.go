@@ -11,8 +11,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/maxliu9403/ProxyHub/internal/common"
-	"github.com/maxliu9403/ProxyHub/internal/types"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/repo"
 	"github.com/maxliu9403/common/gadget"
@@ -29,7 +27,7 @@ func GroupsRepo(db *gorm.DB) repo.GroupsRepo {
 	return &groupCrudImpl{Conn: db}
 }
 
-func (r *groupCrudImpl) GetList(q types.BasicQuery, model, list interface{}) (total int64, err error) {
+func (r *groupCrudImpl) GetList(q models.GetGroupListParams, model, list interface{}) (total int64, err error) {
 	db := r.Conn.Model(model)
 
 	// 指定字段
@@ -51,6 +49,10 @@ func (r *groupCrudImpl) GetList(q types.BasicQuery, model, list interface{}) (to
 	if q.Keyword != "" {
 		fields := gadget.FieldsFromModel(model, db, true).GetStringField()
 		db.Scopes(gormdb.KeywordGenerator(fields, q.Keyword))
+	}
+
+	if q.Name != nil {
+		db.Where("name IN ?", q.Name)
 	}
 
 	// 自定义查询条件
@@ -124,15 +126,9 @@ func (r *groupCrudImpl) Update(id int64, fields map[string]interface{}) error {
 	return r.Conn.Model(&models.Groups{}).Where("id = ?", id).Updates(fields).Error
 }
 
-func (r *groupCrudImpl) ExistsActiveGroup(groupId int64) (bool, error) {
+func (r *groupCrudImpl) ExistsGroup(groupId int64) (bool, error) {
 	var count int64
-	err := r.Conn.Model(&models.Groups{}).Where("available = ? AND id = ?", common.AvailableGroup, groupId).Count(&count).Error
-	return count > 0, err
-}
-
-func (r *groupCrudImpl) IsGroupActive(groupID int64) (bool, error) {
-	var count int64
-	err := r.Conn.Model(&models.Groups{}).Where("id = ? AND available = ?", groupID, common.AvailableGroup).Count(&count).Error
+	err := r.Conn.Model(&models.Groups{}).Where("id = ?", groupId).Count(&count).Error
 	return count > 0, err
 }
 

@@ -17,8 +17,3 @@ type (
 type Test struct {
 	Enable bool `json:"Enable" swaggerignore:"true"`
 }
-
-const (
-	AvailableGroup   = 1
-	UnAvailableGroup = 2
-)

@@ -9,8 +9,6 @@ package handler
 import (
 	"fmt"
 
-	"github.com/maxliu9403/ProxyHub/internal/logic"
-
 	"github.com/gin-gonic/gin"
 	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/ProxyHub/internal/logic/proxy"
@@ -75,10 +73,6 @@ func (m *proxyController) Detail(c *gin.Context) {
 	if ip == "" {
 		m.Response(c, nil, common.NewErrorCode(common.ErrInvalidParams, fmt.Errorf("无效的IP参数")))
 		return
-	}
-
-	if !logic.CheckIP(ip) {
-		m.Response(c, nil, common.NewErrorCode(common.ErrInvalidParams, fmt.Errorf("非法的IP")))
 	}
 
 	svc := proxy.Svc{Ctx: c}

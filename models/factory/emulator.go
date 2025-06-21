@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maxliu9403/ProxyHub/internal/types"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/repo"
 	"github.com/maxliu9403/common/gadget"
@@ -29,7 +28,7 @@ func EmulatorRepo(db *gorm.DB) repo.EmulatorRepo {
 	return &emulatorCrudImpl{Conn: db}
 }
 
-func (r *emulatorCrudImpl) GetList(q types.BasicQuery, model, list interface{}) (total int64, err error) {
+func (r *emulatorCrudImpl) GetList(q models.GetEmulatorListParams, model, list interface{}) (total int64, err error) {
 	db := r.Conn.Model(model)
 
 	// 指定字段
@@ -51,6 +50,18 @@ func (r *emulatorCrudImpl) GetList(q types.BasicQuery, model, list interface{}) 
 	if q.Keyword != "" {
 		fields := gadget.FieldsFromModel(model, db, true).GetStringField()
 		db.Scopes(gormdb.KeywordGenerator(fields, q.Keyword))
+	}
+
+	if q.GroupIDs != nil {
+		db.Where("group_id IN ?", q.GroupIDs)
+	}
+
+	if q.UUIDS != nil {
+		db.Where("uuid IN ?", q.UUIDS)
+	}
+
+	if q.BrowserIDs != nil {
+		db.Where("browser_id IN ?", q.BrowserIDs)
 	}
 
 	// 自定义查询条件
@@ -140,4 +151,13 @@ func (r *emulatorCrudImpl) GetExistingUUIDs(uuids []string) ([]string, error) {
 		Where("uuid IN ?", uuids).
 		Pluck("uuid", &exist).Error
 	return exist, err
+}
+
+func (r *emulatorCrudImpl) ListBriefByGroupID(groupID int64) ([]*models.EmulatorBrief, error) {
+	var list []*models.EmulatorBrief
+	err := r.Conn.Model(&models.Emulator{}).
+		Select("browser_id, uuid, ip").
+		Where("group_id = ?", groupID).
+		Scan(&list).Error
+	return list, err
 }

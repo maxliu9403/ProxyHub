@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/maxliu9403/ProxyHub/internal/logic/group"
-	"github.com/maxliu9403/ProxyHub/internal/types"
-
 	"github.com/maxliu9403/ProxyHub/internal/common"
+	"github.com/maxliu9403/ProxyHub/internal/logic/group"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/factory"
 	"github.com/maxliu9403/ProxyHub/models/repo"
@@ -29,7 +27,12 @@ func (s *Svc) getRepo() repo.EmulatorRepo {
 	return factory.EmulatorRepo(s.DB)
 }
 
-func (s *Svc) GetList(q types.BasicQuery) (data *common.ListData, err error) {
+func (s *Svc) getProxyRepo() repo.ProxyRepo {
+	s.DB = gormdb.Cli(s.Ctx)
+	return factory.ProxyRepo(s.DB)
+}
+
+func (s *Svc) GetList(q models.GetEmulatorListParams) (data *common.ListData, err error) {
 	data = &common.ListData{}
 
 	crud := s.getRepo()
@@ -69,15 +72,60 @@ type DeleteParams struct {
 	Uuids []string `json:"Uuids" binding:"required"` // 待删除 ID 列表
 }
 
-func (s *Svc) Delete(params DeleteParams) (err error) {
-	crud := s.getRepo()
-	err = crud.DeletesByUuids(params.Uuids)
-	if err != nil {
-		logger.ErrorfWithTrace(s.Ctx, "delete %d failed: %s", params.Uuids, err.Error())
-		return common.NewErrorCode(common.ErrDeleteEmulator, err)
-	}
+type ReleaseIPDetail struct {
+	IP           string `json:"IP"`           // 释放IP
+	ReleaseCount int    `json:"ReleaseCount"` // 释放次数
+}
 
-	return err
+type DeleteResp struct {
+	ReleaseIPsDetail []*ReleaseIPDetail `json:"ReleaseIPsDetail"`
+}
+
+func (s *Svc) Delete(params DeleteParams) (resp *DeleteResp, err error) {
+	proxyRepo := s.getProxyRepo()
+
+	resp = &DeleteResp{ReleaseIPsDetail: []*ReleaseIPDetail{}}
+
+	err = gormdb.Cli(s.Ctx).Transaction(func(tx *gorm.DB) error {
+		// 查询要删除的 emulator 的 IP（排除空 IP）
+		var ipList []string
+		if err := tx.Model(&models.Emulator{}).
+			Where("uuid IN ?", params.Uuids).
+			Where("ip != ''").
+			Pluck("ip", &ipList).Error; err != nil {
+			logger.ErrorfWithTrace(s.Ctx, "query emulator IPs failed: %s", err.Error())
+			return common.NewErrorCode(common.ErrDeleteEmulator, fmt.Errorf("查询模拟器 IP 失败: %w", err))
+		}
+
+		// 释放 IP 计数（去重 + 计数）
+		releaseIPMap := make(map[string]int)
+		for _, ip := range ipList {
+			releaseIPMap[ip] += 1
+		}
+
+		// 批量递减 inuse_count
+		for ip, count := range releaseIPMap {
+			if err := proxyRepo.DecrementInUse(ip, count); err != nil {
+				logger.ErrorfWithTrace(s.Ctx, "decrement inuse_count for IP [%s] failed: %s", ip, err.Error())
+				return common.NewErrorCode(common.ErrDeleteEmulator, fmt.Errorf("更新 proxy 使用数失败 (IP=%s): %w", ip, err))
+			}
+			// 添加返回详情
+			resp.ReleaseIPsDetail = append(resp.ReleaseIPsDetail, &ReleaseIPDetail{
+				IP:           ip,
+				ReleaseCount: count,
+			})
+		}
+
+		// 删除模拟器
+		if err := tx.Where("uuid IN ?", params.Uuids).Delete(&models.Emulator{}).Error; err != nil {
+			logger.ErrorfWithTrace(s.Ctx, "delete emulator failed: %s", err.Error())
+			return common.NewErrorCode(common.ErrDeleteEmulator, fmt.Errorf("删除模拟器失败: %w", err))
+		}
+
+		return nil
+	})
+
+	return resp, err
 }
 
 type CreateParams struct {
@@ -132,9 +180,8 @@ func (s *Svc) CreateBatch(params CreateBatchParams) (*CreateBatchResp, error) {
 		}
 		// 校验group_id是否合法
 		groupAPI := group.NewGroupAPI(s.Ctx)
-		hasActiveGroup, err := groupAPI.CheckGroupID(p.GroupID)
+		hasGroup, err := groupAPI.CheckGroupID(p.GroupID)
 		if err != nil {
-
 			invalidEmulator = append(invalidEmulator,
 				Invalid{BrowserID: p.BrowserID,
 					UUID:    p.UUID,
@@ -144,7 +191,7 @@ func (s *Svc) CreateBatch(params CreateBatchParams) (*CreateBatchResp, error) {
 			logger.ErrorfWithTrace(s.Ctx, "check group id failed: %s", err.Error())
 			continue
 		}
-		if !hasActiveGroup {
+		if !hasGroup {
 			invalidEmulator = append(invalidEmulator,
 				Invalid{BrowserID: p.BrowserID,
 					UUID:    p.UUID,
@@ -221,11 +268,11 @@ func (s *Svc) Update(params UpdateParams) error {
 
 	if params.GroupID != nil {
 		groupAPI := group.NewGroupAPI(s.Ctx)
-		hasActiveGroup, err := groupAPI.CheckGroupID(*params.GroupID)
+		hasGroup, err := groupAPI.CheckGroupID(*params.GroupID)
 		if err != nil {
 			return err
 		}
-		if !hasActiveGroup {
+		if !hasGroup {
 			return errors.New("当前分组ID不是激活状态或者不存在")
 		}
 		updateFields["group_id"] = *params.GroupID

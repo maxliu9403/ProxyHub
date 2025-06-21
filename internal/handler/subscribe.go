@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/maxliu9403/ProxyHub/internal/logic/token"
+
 	"github.com/gin-gonic/gin"
 	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/ProxyHub/internal/logic/subscribe"
@@ -29,18 +31,22 @@ func newSubscribeController(base common.BaseController) *subscribeController {
 // @Failure     500     {object} common.Response "服务器内部错误"
 // @Router      /api/subscribe/{token}/{uuid} [get]
 func (m *subscribeController) Get(c *gin.Context) {
-	token := c.Param("token")
+	tokenParam := c.Param("token")
 	uuid := c.Param("uuid")
 
-	if token == "" || uuid == "" {
+	if tokenParam == "" || uuid == "" {
 		m.Response(c, nil, common.NewErrorCode(common.ErrInvalidParams, fmt.Errorf("存在无效参数")))
 		return
 	}
 
-	svc := subscribe.Svc{Ctx: c}
-	clashCfg, err := svc.Subscribe(token, uuid)
+	tokenSvc := &token.Svc{Ctx: c} // 需要是指针，因为接口是由 *token.Svc 实现的
+	svc := subscribe.Svc{
+		Ctx:            c,
+		TokenValidator: tokenSvc,
+	}
+	clashCfg, err := svc.Subscribe(tokenParam, uuid)
 	if err != nil {
-		m.Response(c, nil, common.NewErrorCode(common.ErrUpdateProxy, err))
+		m.Response(c, nil, common.NewErrorCode(common.ErrGetSubscribe, err))
 		return
 	}
 

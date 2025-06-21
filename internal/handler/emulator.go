@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/ProxyHub/internal/logic/emulator"
-	"github.com/maxliu9403/ProxyHub/internal/types"
 	"github.com/maxliu9403/ProxyHub/models"
 )
 
@@ -26,14 +25,14 @@ func newEmulatorController(base common.BaseController) *emulatorController {
 // @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
-// @Param       params body types.BasicQuery false "查询通用请求参数"
+// @Param       params body models.GetEmulatorListParams false "查询通用请求参数"
 // @Success     200 {object} common.ResponseWithTotalCount{Data=[]models.Emulator}
 // @Failure     500 {object} common.Response
 // @Router      /api/emulator/search [post]
 func (e *emulatorController) GetList(c *gin.Context) {
 	var (
 		svc    emulator.Svc
-		params types.BasicQuery
+		params models.GetEmulatorListParams
 	)
 
 	if !e.CheckParams(c, &params) {
@@ -111,7 +110,7 @@ func (e *emulatorController) Detail(c *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Param       params body emulator.DeleteParams true "删除参数"
-// @Success     200 {object} common.Response
+// @Success     200 {object} emulator.DeleteResp
 // @Failure     500 {object} common.Response
 // @Router      /api/emulator [delete]
 func (e *emulatorController) Delete(c *gin.Context) {
@@ -125,8 +124,8 @@ func (e *emulatorController) Delete(c *gin.Context) {
 	}
 
 	svc.Ctx = c
-	err := svc.Delete(params)
-	e.Response(c, nil, err)
+	deleteResp, err := svc.Delete(params)
+	e.Response(c, deleteResp, err)
 }
 
 // Update godoc

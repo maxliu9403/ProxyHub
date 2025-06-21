@@ -11,8 +11,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/maxliu9403/ProxyHub/internal/types"
-
 	"github.com/maxliu9403/ProxyHub/models"
 
 	"github.com/gin-gonic/gin"
@@ -35,7 +33,7 @@ func newGroupController(base common.BaseController) *groupController {
 // @Security    AdminTokenAuth
 // @Accept      json
 // @Produce     json
-// @Param   	params     	body    	types.BasicQuery     	false    "查询通用请求参数"
+// @Param   	params     	body    	models.GetGroupListParams   	false    "查询通用请求参数"
 // @Success     200     {object}        common.ResponseWithTotalCount{Data=[]models.Groups} "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Router      /api/group/search [post]
@@ -43,7 +41,7 @@ func (m *groupController) GetList(c *gin.Context) {
 	var (
 		svc    group.Svc
 		err    error
-		params types.BasicQuery
+		params models.GetGroupListParams
 	)
 
 	if !m.CheckParams(c, &params) {
@@ -73,7 +71,7 @@ func (m *groupController) GetList(c *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Param       id   path     int  true  "分组ID"
-// @Success     200     {object}        common.Response{Data=models.Groups} "结果：{RetCode:code,Data:数据,Message:消息}"
+// @Success     200     {object}        common.Response{Data=group.GroupsDetailResp} "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Failure     500     {object}        common.Response "结果：{RetCode:code,Data:数据,Message:消息}"
 // @Router      /api/group/{id} [get]
 func (m *groupController) Detail(c *gin.Context) {
@@ -118,7 +116,6 @@ func (m *groupController) Delete(c *gin.Context) {
 	}
 
 	svc.Ctx = c
-	svc.RunningTest = params.Test.Enable
 	err = svc.Delete(params)
 	m.Response(c, nil, common.NewErrorCode(common.ErrDeleteGroup, err))
 }
@@ -173,7 +170,6 @@ func (m *groupController) Update(c *gin.Context) {
 	}
 
 	svc.Ctx = c
-	svc.RunningTest = params.Test.Enable
 
 	err = svc.Update(params)
 	m.Response(c, nil, common.NewErrorCode(common.ErrUpdateGroup, err))

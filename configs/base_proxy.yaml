@@ -38,5 +38,4 @@ proxy-groups:
       - residential
 
 rules:
-  - GEOIP,CN,DIRECT
   - MATCH,CHAINED

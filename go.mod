@@ -11,6 +11,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/spf13/cobra v1.2.1
 	github.com/swaggo/swag v1.16.4
+	golang.org/x/sync v0.15.0
 	gorm.io/gorm v1.22.1
 )
 
