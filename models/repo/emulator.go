@@ -1,10 +1,11 @@
 package repo
 
 import (
+	"time"
+
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/common/gormdb"
 	"gorm.io/gorm"
-	"time"
 )
 
 type EmulatorRepo interface {

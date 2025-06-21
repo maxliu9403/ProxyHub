@@ -9,9 +9,10 @@ package factory
 
 import (
 	"fmt"
-	"gorm.io/gorm/clause"
 	"strings"
 	"time"
+
+	"gorm.io/gorm/clause"
 
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/repo"

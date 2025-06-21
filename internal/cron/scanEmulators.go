@@ -3,6 +3,8 @@ package cron
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/maxliu9403/ProxyHub/internal/config"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/factory"
@@ -10,7 +12,6 @@ import (
 	"github.com/maxliu9403/common/gormdb"
 	"github.com/maxliu9403/common/logger"
 	"gorm.io/gorm"
-	"time"
 )
 
 type ScanEmulatorsTaskSvc struct {
