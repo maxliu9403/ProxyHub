@@ -9,9 +9,8 @@ package rediscache
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/maxliu9403/common/logger"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 )

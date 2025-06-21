@@ -9,6 +9,7 @@ package factory
 
 import (
 	"fmt"
+	"gorm.io/gorm/clause"
 	"strings"
 	"time"
 
@@ -148,16 +149,24 @@ func (r *proxyCrudImpl) GetByIP(ip string) (*models.Proxy, error) {
 	return proxy, err
 }
 
-func (r *proxyCrudImpl) IncrementInUse(ip string) error {
-	return r.Conn.Model(&models.Proxy{}).
+func (r *proxyCrudImpl) IncrementInUseTx(tx *gorm.DB, ip string, count int) error {
+	return tx.Model(&models.Proxy{}).
 		Where("ip = ?", ip).
-		UpdateColumn("inuse_count", gorm.Expr("inuse_count + 1")).Error
+		UpdateColumn("inuse_count", gorm.Expr("inuse_count + ?", count)).Error
 }
 
-func (r *proxyCrudImpl) DecrementInUse(ip string, count int) error {
-	return r.Conn.Model(&models.Proxy{}).
+// DecrementInUseTx 在事务中安全递减某个 IP 的 inuse_count
+func (r *proxyCrudImpl) DecrementInUseTx(tx *gorm.DB, ip string, count int) error {
+	// 加锁读取
+	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("ip = ?", ip).First(&models.Proxy{}).Error; err != nil {
+		return err
+	}
+
+	// 原子更新
+	return tx.Model(&models.Proxy{}).
 		Where("ip = ?", ip).
-		UpdateColumn("inuse_count", gorm.Expr("CASE WHEN inuse_count >= ? THEN inuse_count - ? ELSE 0 END", count, count)).Error
+		UpdateColumn("inuse_count", gorm.Expr("GREATEST(inuse_count - ?, 0)", count)).Error
 }
 
 // GetByIPForUpdate 查询指定 IP 并加锁，事务中使用

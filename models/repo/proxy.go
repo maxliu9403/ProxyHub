@@ -10,6 +10,7 @@ package repo
 import (
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/common/gormdb"
+	"gorm.io/gorm"
 )
 
 type ProxyRepo interface {
@@ -21,8 +22,8 @@ type ProxyRepo interface {
 	CreateBatch(proxies []*models.Proxy) error
 	DeletesByIps(IPs []string) error
 	GetByIP(ip string) (*models.Proxy, error)
-	DecrementInUse(ip string, count int) error
-	IncrementInUse(ip string) error
+	IncrementInUseTx(tx *gorm.DB, ip string, count int) error
+	DecrementInUseTx(tx *gorm.DB, ip string, count int) error
 	GetByIPForUpdate(ip string) (*models.Proxy, error)
 	ListByGroupID(groupID int64) ([]*models.ProxyBrief, error)
 }

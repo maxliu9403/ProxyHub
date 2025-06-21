@@ -6,12 +6,13 @@ import (
 	"github.com/maxliu9403/ProxyHub/internal/logic"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/factory"
-	"github.com/maxliu9403/ProxyHub/models/repo"
 	"github.com/maxliu9403/common/logger"
 	"gorm.io/gorm"
 )
 
-func (s *Svc) bindEmulatorToProxyIP(emulator *models.Emulator, selected *models.Proxy, proxyRepo repo.ProxyRepo, emulatorRepo repo.EmulatorRepo) error {
+func (s *Svc) bindEmulatorToProxyIP(tx *gorm.DB, emulator *models.Emulator, selected *models.Proxy) error {
+	proxyRepo := factory.ProxyRepo(tx)
+	emulatorRepo := factory.EmulatorRepo(tx)
 	if emulator.IP == selected.IP {
 		logger.InfofWithTrace(s.Ctx, "模拟器 %s 绑定IP未变更: %s", emulator.UUID, emulator.IP)
 		return nil
@@ -19,13 +20,13 @@ func (s *Svc) bindEmulatorToProxyIP(emulator *models.Emulator, selected *models.
 
 	// 解绑旧 IP
 	if emulator.IP != "" {
-		if err := proxyRepo.DecrementInUse(emulator.IP, 1); err != nil {
+		if err := proxyRepo.DecrementInUseTx(tx, emulator.IP, 1); err != nil {
 			return fmt.Errorf("旧IP %s 减少使用数失败: %w", emulator.IP, err)
 		}
 	}
 
 	// 绑定新 IP
-	if err := proxyRepo.IncrementInUse(selected.IP); err != nil {
+	if err := proxyRepo.IncrementInUseTx(tx, selected.IP, 1); err != nil {
 		return fmt.Errorf("新IP %s 增加使用数失败: %w", selected.IP, err)
 	}
 
@@ -65,13 +66,12 @@ func (s *Svc) switchProxy(emulator *models.Emulator, group *models.Groups) (sele
 
 	err = logic.RetryTransaction(s.DB, func(tx *gorm.DB) error {
 		proxyRepo := factory.ProxyRepo(tx)
-		emulatorRepo := factory.EmulatorRepo(tx)
 
 		tried := map[string]bool{} // 已尝试 IP
 		for i := 0; i < maxRetries; i++ {
 			tried[selected.IP] = true
 
-			// 加锁查询当前选中代理最新的使用数（乐观锁机制）。
+			// 加锁查询当前选中代理最新使用数（乐观锁机制）。
 			selectedLatest, err := proxyRepo.GetByIPForUpdate(selected.IP)
 			if err != nil {
 				return fmt.Errorf("获取代理最新信息失败: %w", err)
@@ -79,7 +79,7 @@ func (s *Svc) switchProxy(emulator *models.Emulator, group *models.Groups) (sele
 
 			if selectedLatest.InUseCount+1 <= int64(group.MaxOnline) {
 				// 合法，执行切换逻辑
-				return s.bindEmulatorToProxyIP(emulator, selected, proxyRepo, emulatorRepo)
+				return s.bindEmulatorToProxyIP(tx, emulator, selected)
 			}
 
 			// 当前 IP 已满，尝试重新选择一个未尝试过的 IP
@@ -92,7 +92,7 @@ func (s *Svc) switchProxy(emulator *models.Emulator, group *models.Groups) (sele
 			selected = pickRandomProxy(untried, emulator.IP)
 			logger.InfofWithTrace(s.Ctx, "重新选择代理，尝试新IP: %s", selected.IP)
 		}
-		return s.bindEmulatorToProxyIP(emulator, selected, proxyRepo, emulatorRepo)
+		return s.bindEmulatorToProxyIP(tx, emulator, selected)
 	}, 3)
 
 	if err != nil {

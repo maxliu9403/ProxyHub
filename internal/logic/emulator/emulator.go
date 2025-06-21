@@ -105,7 +105,7 @@ func (s *Svc) Delete(params DeleteParams) (resp *DeleteResp, err error) {
 
 		// 批量递减 inuse_count
 		for ip, count := range releaseIPMap {
-			if err := proxyRepo.DecrementInUse(ip, count); err != nil {
+			if err := proxyRepo.DecrementInUseTx(tx, ip, count); err != nil {
 				logger.ErrorfWithTrace(s.Ctx, "decrement inuse_count for IP [%s] failed: %s", ip, err.Error())
 				return common.NewErrorCode(common.ErrDeleteEmulator, fmt.Errorf("更新 proxy 使用数失败 (IP=%s): %w", ip, err))
 			}

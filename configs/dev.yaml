@@ -24,3 +24,11 @@ base:
     log_level: info
     # 客户端连接的存活时间(分钟)，该值请小于当前环境MySQL wait_timeout的时间，避免服务端主动断开连接的风险
     conn_max_life_time: 0
+
+custom_cfg:
+  # 模拟器多久没有更新IP，单位小时
+  interval_time: 1
+
+cron_job:
+  # 自动释放IP的执行周期
+  release_ip: "*/1 * * * *"

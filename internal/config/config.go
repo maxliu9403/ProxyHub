@@ -14,8 +14,18 @@ import (
 	"github.com/maxliu9403/common/apiserver"
 )
 
+type CronJob struct {
+	ReleaseIp string `yaml:"release_ip"`
+}
+
+type CustomCfg struct {
+	IntervalTime int `yaml:"interval_time"`
+}
+
 type Config struct {
 	apiserver.APIConfig `yaml:"base"`
+	CronJob             CronJob   `yaml:"cron_job"`
+	CustomCfg           CustomCfg `yaml:"custom_cfg"`
 }
 
 func (c *Config) String() string {
