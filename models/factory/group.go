@@ -135,3 +135,16 @@ func (r *groupCrudImpl) ExistsGroup(groupId int64) (bool, error) {
 func (r *groupCrudImpl) CreateBatch(groups []*models.Groups) error {
 	return r.Conn.Create(&groups).Error
 }
+
+func (r *groupCrudImpl) GetByIDs(ids []int64) (map[int64]*models.Groups, error) {
+	var list []*models.Groups
+	err := r.Conn.Model(&models.Groups{}).Where("id IN ?", ids).Find(&list).Error
+	if err != nil {
+		return nil, err
+	}
+	m := make(map[int64]*models.Groups, len(list))
+	for _, g := range list {
+		m[g.ID] = g
+	}
+	return m, nil
+}

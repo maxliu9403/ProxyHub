@@ -20,4 +20,5 @@ type GroupsRepo interface {
 	Update(id int64, fields map[string]interface{}) error
 	ExistsGroup(groupId int64) (bool, error)
 	CreateBatch(groups []*models.Groups) error
+	GetByIDs(ids []int64) (map[int64]*models.Groups, error)
 }

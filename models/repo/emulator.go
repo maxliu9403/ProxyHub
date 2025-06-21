@@ -3,6 +3,8 @@ package repo
 import (
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/common/gormdb"
+	"gorm.io/gorm"
+	"time"
 )
 
 type EmulatorRepo interface {
@@ -15,4 +17,6 @@ type EmulatorRepo interface {
 	GetByUuid(model interface{}, uuid string) error
 	GetExistingUUIDs(uuids []string) ([]string, error)
 	ListBriefByGroupID(groupID int64) ([]*models.EmulatorBrief, error)
+	ListExpired(before time.Time) ([]*models.Emulator, error)
+	DeletesByUuidsTx(tx *gorm.DB, uuids []string) error
 }

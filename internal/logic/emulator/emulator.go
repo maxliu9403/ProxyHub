@@ -16,10 +16,9 @@ import (
 )
 
 type Svc struct {
-	ID          int64
-	Ctx         context.Context
-	RunningTest bool
-	DB          *gorm.DB
+	ID  int64
+	Ctx context.Context
+	DB  *gorm.DB
 }
 
 func (s *Svc) getRepo() repo.EmulatorRepo {

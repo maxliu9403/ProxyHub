@@ -161,3 +161,17 @@ func (r *emulatorCrudImpl) ListBriefByGroupID(groupID int64) ([]*models.Emulator
 		Scan(&list).Error
 	return list, err
 }
+
+func (r *emulatorCrudImpl) ListExpired(before time.Time) ([]*models.Emulator, error) {
+	var list []*models.Emulator
+	err := r.Conn.Model(&models.Emulator{}).
+		Where("update_time < ? AND delete_time IS NULL AND ip != ''", before).
+		Find(&list).Error
+	return list, err
+}
+
+func (r *emulatorCrudImpl) DeletesByUuidsTx(tx *gorm.DB, uuids []string) error {
+	return tx.Model(&models.Emulator{}).
+		Where("uuid IN ?", uuids).
+		Update("delete_time", time.Now()).Error
+}
