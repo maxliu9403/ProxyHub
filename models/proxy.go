@@ -18,3 +18,19 @@ type ProxyBrief struct {
 	Username string `json:"Username"`
 	Password string `json:"Password"`
 }
+
+type ReleaseIPDetail struct {
+	IP    string `json:"IP"`
+	Count int    `json:"Count"`
+}
+
+type UnbindEmulator struct {
+	BrowserID string `json:"BrowserID"`
+	UUID      string `json:"UUID"`
+}
+type GroupReleaseResult struct {
+	GroupName       string            `json:"GroupName"`
+	MaxOnline       int               `json:"MaxOnline"`
+	ReleaseIPDetail []ReleaseIPDetail `json:"ReleaseIPDetail"`
+	UnbindEmulator  []UnbindEmulator  `json:"UnbindEmulator"`
+}

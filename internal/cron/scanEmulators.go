@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/maxliu9403/ProxyHub/internal/pkg/mailer"
+
 	"github.com/maxliu9403/ProxyHub/internal/config"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/ProxyHub/models/factory"
@@ -15,21 +17,15 @@ import (
 )
 
 type ScanEmulatorsTaskSvc struct {
-	ctx          context.Context
-	db           *gorm.DB
-	emulatorRepo repo.EmulatorRepo
-	proxyRepo    repo.ProxyRepo
-	groupRepo    repo.GroupsRepo
+	ctx context.Context
+	db  *gorm.DB
 }
 
-type ReleaseIPDetail struct {
-	IP    string `json:"IP"`
-	Count int    `json:"Count"`
-}
-
-type UnbindEmulator struct {
-	BrowserID string `json:"BrowserID"`
-	UUID      string `json:"UUID"`
+func NewScanEmulatorsTaskSvc(ctx context.Context) *ScanEmulatorsTaskSvc {
+	return &ScanEmulatorsTaskSvc{
+		ctx: ctx,
+		db:  gormdb.Cli(ctx),
+	}
 }
 
 func (s *ScanEmulatorsTaskSvc) getGroupRepo() repo.GroupsRepo {
@@ -37,24 +33,12 @@ func (s *ScanEmulatorsTaskSvc) getGroupRepo() repo.GroupsRepo {
 	return factory.GroupsRepo(s.db)
 }
 
-func (s *ScanEmulatorsTaskSvc) getProxyRepo() repo.ProxyRepo {
-	s.db = gormdb.Cli(s.ctx)
-	return factory.ProxyRepo(s.db)
-}
-
 func (s *ScanEmulatorsTaskSvc) getEmulatorRepo() repo.EmulatorRepo {
 	s.db = gormdb.Cli(s.ctx)
 	return factory.EmulatorRepo(s.db)
 }
 
-type GroupReleaseResult struct {
-	GroupName       string            `json:"GroupName"`
-	MaxOnline       int               `json:"MaxOnline"`
-	ReleaseIPDetail []ReleaseIPDetail `json:"ReleaseIPDetail"`
-	UnbindEmulator  []UnbindEmulator  `json:"UnbindEmulator"`
-}
-
-func (s *ScanEmulatorsTaskSvc) ScanAndDeleteExpiredEmulators() ([]*GroupReleaseResult, error) {
+func (s *ScanEmulatorsTaskSvc) ScanAndDeleteExpiredEmulators() ([]*models.GroupReleaseResult, error) {
 	msgPrefix := "定时清扫模拟器失败"
 
 	// 1. 查询过期 emulator
@@ -94,7 +78,7 @@ func (s *ScanEmulatorsTaskSvc) ScanAndDeleteExpiredEmulators() ([]*GroupReleaseR
 		return nil, err
 	}
 
-	var results []*GroupReleaseResult
+	var results []*models.GroupReleaseResult
 
 	// 4. 启动事务处理：更新 Proxy 使用数 + 删除 Emulator
 	err = s.db.Transaction(func(tx *gorm.DB) error {
@@ -122,15 +106,15 @@ func (s *ScanEmulatorsTaskSvc) ScanAndDeleteExpiredEmulators() ([]*GroupReleaseR
 		// 5. 构造返回结果
 		for groupID, emus := range grouped {
 			groupInfo := groupsMap[groupID]
-			result := &GroupReleaseResult{
+			result := &models.GroupReleaseResult{
 				GroupName:       groupInfo.Name,
 				MaxOnline:       groupInfo.MaxOnline,
-				UnbindEmulator:  []UnbindEmulator{},
-				ReleaseIPDetail: []ReleaseIPDetail{},
+				UnbindEmulator:  []models.UnbindEmulator{},
+				ReleaseIPDetail: []models.ReleaseIPDetail{},
 			}
 			ipCount := make(map[string]int)
 			for _, e := range emus {
-				result.UnbindEmulator = append(result.UnbindEmulator, UnbindEmulator{
+				result.UnbindEmulator = append(result.UnbindEmulator, models.UnbindEmulator{
 					BrowserID: e.BrowserID,
 					UUID:      e.UUID,
 				})
@@ -139,7 +123,7 @@ func (s *ScanEmulatorsTaskSvc) ScanAndDeleteExpiredEmulators() ([]*GroupReleaseR
 				}
 			}
 			for ip, count := range ipCount {
-				result.ReleaseIPDetail = append(result.ReleaseIPDetail, ReleaseIPDetail{
+				result.ReleaseIPDetail = append(result.ReleaseIPDetail, models.ReleaseIPDetail{
 					IP:    ip,
 					Count: count,
 				})
@@ -155,4 +139,46 @@ func (s *ScanEmulatorsTaskSvc) ScanAndDeleteExpiredEmulators() ([]*GroupReleaseR
 	}
 
 	return results, err
+}
+
+type ScanExpiredEmulatorJob struct {
+	Svc *ScanEmulatorsTaskSvc
+}
+
+func (j *ScanExpiredEmulatorJob) Run() {
+	logger.Infof("开始执行定时任务：清理过期模拟器")
+	results, err := j.Svc.ScanAndDeleteExpiredEmulators()
+	if err != nil {
+		logger.Errorf("清理过期模拟器任务执行失败: %v", err)
+		return
+	}
+	logger.Infof("定时清理完成，共处理组数: %s", results)
+	// TODO: 可选：发送邮件、推送通知
+	if len(results) > 0 && config.G.Mail.Enable {
+		html, err := mailer.RenderReleaseHTML(results)
+		if err != nil {
+			logger.Errorf("生成 Markdown 内容失败: %v", err)
+			return
+		}
+
+		//html, err := mailer.MarkdownToHTML(markdown)
+		//if err != nil {
+		//	logger.Errorf("Markdown 转 HTML 失败: %v", err)
+		//	return
+		//}
+
+		err = mailer.SendMail(mailer.MailConfig{
+			Host:     config.G.Mail.SMTPHost,
+			Port:     config.G.Mail.SMTPPort,
+			Username: config.G.Mail.Username,
+			Password: config.G.Mail.Password,
+			To:       config.G.Mail.To,
+		}, "ClashProxyHub - 模拟器清理报告", html)
+		if err != nil {
+			logger.Errorf("发送清理邮件失败: %v", err)
+		} else {
+			logger.Infof("清理报告邮件发送成功")
+		}
+
+	}
 }

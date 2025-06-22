@@ -184,8 +184,9 @@ func (r *emulatorCrudImpl) ListBriefByGroupID(groupID int64) ([]*models.Emulator
 
 func (r *emulatorCrudImpl) ListExpired(before time.Time) ([]*models.Emulator, error) {
 	var list []*models.Emulator
+	beforeUnix := before.Unix()
 	err := r.Conn.Model(&models.Emulator{}).
-		Where("update_time < ? AND delete_time IS NULL AND ip != ''", before).
+		Where("update_time < ? AND delete_time IS NULL AND ip != ''", beforeUnix).
 		Find(&list).Error
 	return list, err
 }

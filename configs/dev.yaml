@@ -32,3 +32,13 @@ custom_cfg:
 cron_job:
   # 自动释放IP的执行周期
   release_ip: "*/1 * * * *"
+
+mailer:
+  enable: true
+  smtp_host: smtp.163.com
+  smtp_port: 465
+  username: m18692995321_2@163.com
+  password: 
+  to:
+    - maxliu9403@gmail.com
+    - ShowTina7561@outlook.com

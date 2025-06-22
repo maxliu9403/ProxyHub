@@ -12,13 +12,15 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/maxliu9403/ProxyHub/internal/cron"
+	"github.com/maxliu9403/common/cronjob"
+
 	"github.com/maxliu9403/ProxyHub/internal/common"
 	"github.com/maxliu9403/ProxyHub/internal/config"
 	"github.com/maxliu9403/ProxyHub/internal/handler"
 	"github.com/maxliu9403/ProxyHub/models"
 	"github.com/maxliu9403/common/apiserver"
 	"github.com/maxliu9403/common/apiserver/conf"
-	"github.com/maxliu9403/common/cronjob"
 	"github.com/maxliu9403/common/logger"
 	"github.com/maxliu9403/common/version"
 	"github.com/spf13/cobra"
@@ -64,8 +66,10 @@ func run() (err error) {
 	group := server.AddGinGroup("")
 	tra := server.GetTracer()
 	handler.RegisterRouter(tra, group)
-	job := cronjob.CronJobs
-	job.Start()
+	// 注册定时任务
+	cron.RegisterCronJobs(ctx)
+	cronjob.CronJobs.Start()
+	defer cronjob.CronJobs.Stop()
 	// 初始化 validator 翻译器
 	if err = common.InitTrans("zh"); err != nil {
 		return fmt.Errorf("init trans failed, err: %v", err)
