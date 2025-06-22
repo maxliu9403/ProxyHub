@@ -16,7 +16,6 @@ type GroupsRepo interface {
 	gormdb.GetByIDCrud
 	GetList(q models.GetGroupListParams, model, list interface{}) (total int64, err error)
 	Deletes([]int64) (err error)
-	Create(group *models.Groups) error
 	Update(id int64, fields map[string]interface{}) error
 	ExistsGroup(groupId int64) (bool, error)
 	CreateBatch(groups []*models.Groups) error

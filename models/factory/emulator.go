@@ -130,8 +130,28 @@ func (r *emulatorCrudImpl) Update(uuid string, fields map[string]interface{}) er
 	return r.Conn.Model(&models.Emulator{}).Where("uuid = ?", uuid).Updates(fields).Error
 }
 
-func (r *emulatorCrudImpl) CreateBatch(emulator []*models.Emulator) error {
-	return r.Conn.Create(&emulator).Error
+func (r *emulatorCrudImpl) CreateBatch(emulators []*models.Emulator) error {
+	if len(emulators) == 0 {
+		return nil
+	}
+
+	// 收集 UUID 列表
+	uuids := make([]string, 0, len(emulators))
+	for _, e := range emulators {
+		uuids = append(uuids, e.UUID)
+	}
+
+	// 只物理删除已软删除（delete_time 不为空）的冲突 UUID 记录，mysql唯一索引会有冲突
+	if err := r.Conn.
+		Unscoped().
+		Where("uuid IN ?", uuids).
+		Where("delete_time IS NOT NULL").
+		Delete(&models.Emulator{}).Error; err != nil {
+		return err
+	}
+
+	// 插入新记录
+	return r.Conn.Create(&emulators).Error
 }
 
 func (r *emulatorCrudImpl) DeletesByUuids(uuids []string) error {

@@ -135,6 +135,25 @@ func (r *proxyCrudImpl) Update(id int64, fields map[string]interface{}) error {
 }
 
 func (r *proxyCrudImpl) CreateBatch(proxies []*models.Proxy) error {
+	if len(proxies) == 0 {
+		return nil
+	}
+
+	ips := make([]string, 0, len(proxies))
+	for _, e := range proxies {
+		ips = append(ips, e.IP)
+	}
+
+	// 只物理删除已软删除（delete_time 不为空）的冲突 UUID 记录，mysql唯一索引会有冲突
+	if err := r.Conn.
+		Unscoped().
+		Where("ip IN ?", ips).
+		Where("delete_time IS NOT NULL").
+		Delete(&models.Proxy{}).Error; err != nil {
+		return err
+	}
+
+	// 插入新记录
 	return r.Conn.Create(&proxies).Error
 }
 

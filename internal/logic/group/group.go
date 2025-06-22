@@ -260,7 +260,20 @@ func (s *Svc) CreateBatch(params CreateGroupBatchParams) (*CreateBatchResp, erro
 		}
 	}()
 
-	tokenRepo := factory.TokenRepo(tx)
+	// 1. 提取所有分组名
+	groupNames := make([]string, 0, len(toCreate))
+	for _, g := range toCreate {
+		groupNames = append(groupNames, g.Name)
+	}
+	// 2. 删除所有 deleted_at IS NOT NULL 的冲突记录（避免唯一索引报错）
+	if err := tx.
+		Unscoped().
+		Where("name IN ?", groupNames).
+		Where("delete_time IS NOT NULL").
+		Delete(&models.Groups{}).Error; err != nil {
+		tx.Rollback()
+		return nil, common.NewErrorCode(common.ErrCreateGroup, fmt.Errorf("清理软删除记录失败: %w", err))
+	}
 
 	// 批量插入分组（不使用 IGNORE，出现重复时整批失败）
 	if err := tx.Create(&toCreate).Error; err != nil {
@@ -273,6 +286,7 @@ func (s *Svc) CreateBatch(params CreateGroupBatchParams) (*CreateBatchResp, erro
 		return nil, common.NewErrorCode(common.ErrCreateGroup, err)
 	}
 
+	tokenRepo := factory.TokenRepo(tx)
 	// 遍历插入成功的分组，为每个分组生成一个 Token
 	for _, group := range toCreate {
 		tokenStr, err := logic.GenerateSecureToken(32)

@@ -118,10 +118,6 @@ func (r *groupCrudImpl) Deletes(ids []int64) (err error) {
 	return err
 }
 
-func (r *groupCrudImpl) Create(group *models.Groups) error {
-	return r.Conn.Create(group).Error
-}
-
 func (r *groupCrudImpl) Update(id int64, fields map[string]interface{}) error {
 	return r.Conn.Model(&models.Groups{}).Where("id = ?", id).Updates(fields).Error
 }
@@ -133,6 +129,23 @@ func (r *groupCrudImpl) ExistsGroup(groupId int64) (bool, error) {
 }
 
 func (r *groupCrudImpl) CreateBatch(groups []*models.Groups) error {
+	if len(groups) == 0 {
+		return nil
+	}
+
+	names := make([]string, 0, len(groups))
+	for _, e := range groups {
+		names = append(names, e.Name)
+	}
+
+	// 只物理删除已软删除（delete_time 不为空）的冲突 UUID 记录，mysql唯一索引会有冲突
+	if err := r.Conn.
+		Unscoped().
+		Where("name IN ?", names).
+		Where("delete_time IS NOT NULL").
+		Delete(&models.Groups{}).Error; err != nil {
+		return err
+	}
 	return r.Conn.Create(&groups).Error
 }
 
