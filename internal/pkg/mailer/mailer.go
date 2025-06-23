@@ -53,7 +53,7 @@ func SendMail(cfg MailConfig, subject, body string) error {
 	if err = client.Mail(cfg.Username); err != nil {
 		return err
 	}
-	for _, to := range cfg.To {
+	for _, to := range cfg.SendTo {
 		if err = client.Rcpt(to); err != nil {
 			return err
 		}
