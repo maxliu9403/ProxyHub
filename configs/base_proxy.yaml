@@ -14,13 +14,6 @@ profile:
   persist: true
 
 proxies:
-  - name: "basic"
-    type: trojan
-    server: ip0axvlbbsu02k7-hk.1ytnode.com
-    port: 56301
-    password: 4ea97c07-da7d-4a23-ad59-3858068450ab
-    skip-cert-verify: true
-
   - name: "residential"
     type: {{ .ISPProtocol }}
     server: {{ .ISPServer }}
@@ -31,11 +24,10 @@ proxies:
     interface-name: "tun0"
 
 proxy-groups:
-  - name: "CHAINED"
-    type: relay
+  - name: "AUTO"
+    type: select
     proxies:
-      - basic
       - residential
 
 rules:
-  - MATCH,CHAINED
+  - MATCH,AUTO
