@@ -12,7 +12,7 @@ type MailConfig struct {
 	Port     int
 	Username string
 	Password string
-	To       []string
+	SendTo   []string
 }
 
 func SendMail(cfg MailConfig, subject, body string) error {
@@ -27,10 +27,10 @@ func SendMail(cfg MailConfig, subject, body string) error {
 			"Content-Type: text/html; charset=UTF-8\r\n"+
 			"\r\n"+
 			"%s",
-		cfg.Username,              // 发件人
-		strings.Join(cfg.To, ","), // 收件人
-		subject,                   // 主题
-		body,                      // HTML 内容
+		cfg.Username,                  // 发件人
+		strings.Join(cfg.SendTo, ","), // 收件人
+		subject,                       // 主题
+		body,                          // HTML 内容
 	))
 
 	// 使用 TLS 启动安全连接

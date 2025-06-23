@@ -15,7 +15,7 @@ services:
       - ./mysql/conf/my.cnf:/etc/mysql/my.cnf
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p${MYSQL_ROOT_PASSWORD} || exit 1"]
+      test: [ "CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p${MYSQL_ROOT_PASSWORD} || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -39,4 +39,13 @@ services:
       MySQLWriteUser: root
       MySQLWritePassword: ${MYSQL_ROOT_PASSWORD}
       MySQLWriteDB: ${MYSQL_DATABASE}
-    command: ["/app/proxyhub", "--config", "/app/configs/dev.yaml"]
+      ReleaseIpPeriod: ${ReleaseIpPeriod}
+      MailCfgEnable: ${MailCfgEnable}
+      MailCfgSMTPPort: ${MailCfgSMTPPort}
+      MailCfgSMTPHost: ${MailCfgSMTPHost}
+      MailCfgUsername: ${MailCfgUsername}
+      MailCfgPassword: ${MailCfgPassword}
+      MailCfgSendTo: ${MailCfgSendTo}
+      IntervalTime: ${IntervalTime}
+
+    command: [ "/app/proxyhub", "--config", "/app/configs/dev.yaml" ]

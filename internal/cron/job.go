@@ -13,7 +13,7 @@ func RegisterCronJobs(ctx context.Context) {
 	}
 
 	// 每小时执行一次（示例）："@hourly" or "0 * * * *"
-	if _, err := cronjob.CronJobs.AddJob(config.G.CronJob.ReleaseIp, job); err != nil {
+	if _, err := cronjob.CronJobs.AddJob(config.G.CronJob.ReleaseIpPeriod, job); err != nil {
 		panic("注册 ScanExpiredEmulatorJob 失败: " + err.Error())
 	}
 }

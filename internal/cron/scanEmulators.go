@@ -172,7 +172,7 @@ func (j *ScanExpiredEmulatorJob) Run() {
 			Port:     config.G.Mail.SMTPPort,
 			Username: config.G.Mail.Username,
 			Password: config.G.Mail.Password,
-			To:       config.G.Mail.To,
+			SendTo:   config.G.Mail.SendTo,
 		}, "ClashProxyHub - 模拟器清理报告", html)
 		if err != nil {
 			logger.Errorf("发送清理邮件失败: %v", err)
