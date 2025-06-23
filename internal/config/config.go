@@ -15,20 +15,20 @@ import (
 )
 
 type CronJob struct {
-	ReleaseIpPeriod string `yaml:"release_ip" env:"ReleaseIpPeriod"`
+	ReleaseIpPeriod string `yaml:"release_ip" env:"ReleaseIpPeriod" env-default:"*/6 * * * *"`
 }
 
 type MailCfg struct {
-	Enable   bool     `yaml:"enable" env:"MailCfgEnable"`      // 是否启用邮件通知
-	SMTPHost string   `yaml:"smtp_host" env:"MailCfgSMTPHost"` // SMTP服务器地址
-	SMTPPort int      `yaml:"smtp_port" env:"MailCfgSMTPPort"` // SMTP服务器端口
-	Username string   `yaml:"username" env:"MailCfgUsername"`  // SMTP用户名（发件人邮箱）
-	Password string   `yaml:"password" env:"MailCfgPassword"`  // SMTP密码或授权码
-	SendTo   []string `yaml:"send_to" env:"MailCfgSendTo"`     // 收件人列表
+	Enable   bool     `yaml:"enable" env:"MailCfgEnable" env-default:"true"`              // 是否启用邮件通知
+	SMTPHost string   `yaml:"smtp_host" env:"MailCfgSMTPHost" env-default:"smtp.163.com"` // SMTP服务器地址
+	SMTPPort int      `yaml:"smtp_port" env:"MailCfgSMTPPort" env-default:"465"`          // SMTP服务器端口
+	Username string   `yaml:"username" env:"MailCfgUsername"`                             // SMTP用户名（发件人邮箱）
+	Password string   `yaml:"password" env:"MailCfgPassword"`                             // SMTP密码或授权码
+	SendTo   []string `yaml:"send_to" env:"MailCfgSendTo"`                                // 收件人列表
 }
 
 type CustomCfg struct {
-	IntervalTime int `yaml:"interval_time" env:"IntervalTime"`
+	IntervalTime int `yaml:"interval_time" env:"IntervalTime"  env-default:"12"`
 }
 
 type Config struct {
