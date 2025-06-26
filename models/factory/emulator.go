@@ -136,15 +136,15 @@ func (r *emulatorCrudImpl) CreateBatch(emulators []*models.Emulator) error {
 	}
 
 	// 收集 UUID 列表
-	uuids := make([]string, 0, len(emulators))
+	browserIds := make([]string, 0, len(emulators))
 	for _, e := range emulators {
-		uuids = append(uuids, e.UUID)
+		browserIds = append(browserIds, e.BrowserID)
 	}
 
 	// 只物理删除已软删除（delete_time 不为空）的冲突 UUID 记录，mysql唯一索引会有冲突
 	if err := r.Conn.
 		Unscoped().
-		Where("uuid IN ?", uuids).
+		Where("browser_id IN ?", browserIds).
 		Where("delete_time IS NOT NULL").
 		Delete(&models.Emulator{}).Error; err != nil {
 		return err
